@@ -20,6 +20,10 @@ class Router
     public function __construct()
     {
         $this->routes = $this->loadRoutes();
+        $routesConfig = require __DIR__ . '/../config/routes.php';
+        if (is_callable($routesConfig)) {
+            $routesConfig($this); // Pass `$this` (the current Router instance) to define routes
+        }
     }
 
     /**
@@ -135,5 +139,20 @@ class Router
             return $this->routesName[$name];
         }
         return null;
+    }
+
+    public function add($name, $path, $methods = ["GET"])
+    {
+        $this->routes[] = ['path' => $path, 'name' => $name, 'methods' => $methods];
+        return $this;
+    }
+    public function controller($controller, $method_name)
+    {
+        $lastRoute = array_key_last($this->routes);
+        if ($lastRoute !== null) {
+            $this->routes[$lastRoute]['controller'] = $controller;
+            $this->routes[$lastRoute]['action'] = $method_name;
+        }
+        return $this;
     }
 };
