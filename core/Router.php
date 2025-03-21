@@ -24,6 +24,18 @@ class Router
         if (is_callable($routesConfig)) {
             $routesConfig($this); // Pass `$this` (the current Router instance) to define routes
         }
+
+        // $yamlRoutes = Yaml::parseFile(dirname(__DIR__) . '/config/routes.yaml');
+
+        // if (isset($yamlRoutes['routes'])) {
+        //     foreach ($yamlRoutes['routes'] as $name => $route) {
+        //         $this->add($name, $route['path'])
+        //             ->controller($route['controller'], $route['action']);
+        //     }
+        // }
+        // // echo ("EHOP");
+        // // print_r($this->routes);
+        // print_r($this->routesName);
     }
 
     /**
@@ -75,6 +87,18 @@ class Router
                         'name' => $route->name, //route name => /path, name: 'something'
                     ];
                     if (isset($route->name)) {
+                        if (array_key_exists($route->name, $this->routesName)) {
+                            $element = $this->routesName[$route->name];
+                            $controller = $element['controller'];
+                            $action = $element['action'];
+                            $method_of_current_class = $method->getName();
+                            throw new \Exception(
+                                "Error 404: The route name '{$route->name}' is already in use. 
+                                Defined in: $controller::$action(). 
+                                Conflict detected in: $controllerClass::$method_of_current_class(). 
+                                Please choose a unique route name."
+                            );
+                        }
                         // store the name attributes
                         $this->routesName[$route->name] = end($routes);
                     }
@@ -143,6 +167,16 @@ class Router
 
     public function add($name, $path, $methods = ["GET"])
     {
+        if (array_key_exists($name, $this->routesName)) {
+            $element = $this->routesName[$name];
+            $controller = $element['controller'];
+            $action = $element['action'];
+            throw new \Exception(
+                "Error 404: The route name '{$name}' is already in use. 
+                Defined in: $controller::$action(). 
+                Please choose a unique route name."
+            );
+        }
         $this->routes[] = ['path' => $path, 'name' => $name, 'methods' => $methods];
         return $this;
     }
@@ -152,6 +186,7 @@ class Router
         if ($lastRoute !== null) {
             $this->routes[$lastRoute]['controller'] = $controller;
             $this->routes[$lastRoute]['action'] = $method_name;
+            $this->routesName[$this->routes[$lastRoute]['name']] = end($this->routes);
         }
         return $this;
     }
