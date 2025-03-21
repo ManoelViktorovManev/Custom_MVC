@@ -11,14 +11,14 @@ class App
 {
     private Router $router;
     private DatabaseManager $dbManager;
-    private LogMessages $log;
+    // private LogMessages $log;
 
     public function __construct()
     {
-        $this->log = new LogMessages();
-        $this->dbManager = new DatabaseManager(); // here should i handle input for monolog/monolog
-        $this->router = new Router();
         try {
+            // $this->log = new LogMessages();
+            $this->dbManager = new DatabaseManager(); // here should i handle input for monolog/monolog
+            $this->router = new Router();
             $this->checkForExistingResponse();
         } catch (Exception $e) {
             echo "<h1>" . ($e->getMessage()) . "</h1>";
@@ -100,17 +100,17 @@ class App
 
             // We check if it returns Response object always
             if ($response instanceof Response) {
-                $this->log->setMessage('info', "Successfully executet $controller_name::$functionToBeCalled() for route $path");
+                // $this->log->setMessage('info', "Successfully executet $controller_name::$functionToBeCalled() for route $path");
                 $this->executeResponse($response);
             } else {
                 // HANDLE IF RESPONSE IS NOT RESPONSE OBJECT
-                $this->log->setMessage('error', "Class method $controller_name::$functionToBeCalled() for route $path is not returning Response object");
+                // $this->log->setMessage('error', "Class method $controller_name::$functionToBeCalled() for route $path is not returning Response object");
                 throw new \Exception("Class method $controller_name::$functionToBeCalled() for route $path is not returning Response object");
             }
             return;
         }
         // IF THERE IS NO SUCH FILE FINDED
-        $this->log->setMessage('error', "Error 404: Not existing route $userRequestUrl");
+        // $this->log->setMessage('error', "Error 404: Not existing route $userRequestUrl");
         throw new \Exception("Error 404: Not existing route $userRequestUrl");
     }
 
