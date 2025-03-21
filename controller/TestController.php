@@ -79,7 +79,7 @@ class TestController extends BaseController
         return new Response('Succesfully we handle route name.');
     }
 
-    #[Route('/asdf/ff', name: 'redirect_route')]
+    #[Route('/asdf/ff', name: 'redirect_route1')]
     public function testResponseReturn()
     {
         //return $this->arrayChecker()
@@ -87,7 +87,7 @@ class TestController extends BaseController
         return 0;
     }
 
-    #[Route('/test/{text}', name: 'redirect_route')]
+    #[Route('/test/{text}', name: 'redirect_route2')]
     public function testCustomText($text)
     {
 

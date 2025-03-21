@@ -25,4 +25,11 @@ class NewPhpRouteImp extends BaseController
             'Reverse' => -$param,
         ]);
     }
+
+    public function yamlTest(): Response
+    {
+        return $this->json([
+            "Yaml" => true
+        ]);
+    }
 };
