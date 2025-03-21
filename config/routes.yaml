@@ -1,0 +1,5 @@
+routes:
+  izwajdane1:
+    path: "/yaml"
+    controller: "App\\Controller\\NewPhpRouteImp"
+    action: "yamlTest"
