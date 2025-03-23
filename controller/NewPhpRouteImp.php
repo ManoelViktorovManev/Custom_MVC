@@ -32,4 +32,17 @@ class NewPhpRouteImp extends BaseController
             "Yaml" => true
         ]);
     }
+    public function phpInfo(): Response
+    {
+        return new Response(
+            phpinfo()
+        );
+    }
+
+    public function yamlParam($param): Response
+    {
+        return new Response(
+            $param
+        );
+    }
 };
