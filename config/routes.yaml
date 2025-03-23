@@ -1,5 +1,14 @@
-routes:
-  izwajdane1:
-    path: "/yaml"
-    controller: "App\\Controller\\NewPhpRouteImp"
-    action: "yamlTest"
+# name: name of route 
+#  path: path to call 
+#  controller: Controller class 
+#  action: method to be called from Controller class
+
+info:
+  path: /phpInfo
+  controller: App\Controller\NewPhpRouteImp
+  action: phpInfo
+
+test_yaml_parameter:
+  path: /yamlparam/{param}
+  controller: App\Controller\NewPhpRouteImp
+  action: yamlParam
