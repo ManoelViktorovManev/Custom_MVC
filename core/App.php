@@ -11,13 +11,11 @@ class App
 {
     private Router $router;
     private DatabaseManager $dbManager;
-    // private LogMessages $log;
 
     public function __construct()
     {
         try {
-            // $this->log = new LogMessages();
-            $this->dbManager = new DatabaseManager(); // here should i handle input for monolog/monolog
+            $this->dbManager = DatabaseManager::getInstance();
             $this->router = new Router();
             $this->checkForExistingResponse();
         } catch (Exception $e) {
