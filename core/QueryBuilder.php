@@ -3,7 +3,7 @@
 namespace App\Core;
 
 
-class QueryBuilder extends DatabaseManager
+class QueryBuilder
 {
 
     private $modelClassTable;
@@ -13,8 +13,8 @@ class QueryBuilder extends DatabaseManager
 
     public function __construct($table)
     {
-        $this->modelClassTable = $table;
-        $this->db = parent::getDB();
+        $this->modelClassTable = $table;;
+        $this->db = DatabaseManager::getInstance()->getDB();
     }
 
     private function buildAndExecuteSTMT($sql)
