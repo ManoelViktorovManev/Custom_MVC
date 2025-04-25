@@ -25,6 +25,6 @@ abstract class BaseModel
 
     public function query()
     {
-        return new QueryBuilder($this->getTable());
+        return new QueryBuilder($this, $this->getTable());
     }
 };
