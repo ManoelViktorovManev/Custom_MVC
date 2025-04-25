@@ -2,7 +2,7 @@
 
 namespace App\Core;
 
-class DbManipulation extends DatabaseManager
+class DbManipulation
 {
     private $queue;
     private $deletequeue;
@@ -11,7 +11,7 @@ class DbManipulation extends DatabaseManager
 
     public function __construct()
     {
-        $this->db = DatabaseManager::getInstance()->getDB();
+        $this->db = DataBaseComponent::getInstance()->getDB();
         $this->deletequeue = [];
         $this->queue = [];
     }
