@@ -10,11 +10,13 @@ class QueryBuilder
     private $db;
     private $sql;
     private $bindings;
+    private BaseModel $model;
 
-    public function __construct($table)
+    public function __construct(BaseModel $model)
     {
-        $this->modelClassTable = $table;;
-        $this->db = DatabaseManager::getInstance()->getDB();
+        $this->model = $model;
+        $this->modelClassTable = $this->model->getTable();
+        $this->db = DataBaseComponent::getInstance()->getDB();
     }
 
     private function buildAndExecuteSTMT($sql)
@@ -26,16 +28,30 @@ class QueryBuilder
         $stmt->execute();
         return $stmt;
     }
-    public function all()
+    public function all(): array
     {
         $sql = $this->sql ?: "SELECT * FROM {$this->modelClassTable}";
         $stmt = $this->buildAndExecuteSTMT($sql);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
-    public function first()
+    public function first(): ?BaseModel
     {
         $stmt = $this->buildAndExecuteSTMT($this->sql);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$result) {
+            return null; // Nothing found
+        }
+
+        $reflect = new \ReflectionClass($this->model);
+        foreach ($result as $property => $value) {
+            if ($reflect->hasProperty($property)) {
+                $prop = $reflect->getProperty($property);
+                $prop->setAccessible(true);
+                $prop->setValue($this->model, $value);
+            }
+        }
+
+        return $this->model;
     }
 
     public function where(array $input)

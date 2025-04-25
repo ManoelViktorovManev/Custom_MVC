@@ -4,18 +4,20 @@ namespace App\Core;
 
 use App\Core\Router;
 use App\Core\Response;
-use App\Core\LogMessages;
+
 use Exception;
 
 class App
 {
     private Router $router;
-    private DatabaseManager $dbManager;
+    private DataBaseComponent $dbComponent;
+    private EntityManipulation $entity;
 
     public function __construct()
     {
         try {
-            $this->dbManager = DatabaseManager::getInstance();
+            $this->dbComponent = DataBaseComponent::getInstance();
+            $this->entity = EntityManipulation::getInstance($this->dbComponent);
             $this->router = new Router();
             $this->checkForExistingResponse();
         } catch (Exception $e) {
