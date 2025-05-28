@@ -1,0 +1,4 @@
+# name: name of route 
+#  path: path to call 
+#  controller: Controller class 
+#  action: method to be called from Controller class

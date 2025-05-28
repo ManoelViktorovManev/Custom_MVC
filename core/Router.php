@@ -3,7 +3,7 @@
 namespace App\Core;
 
 use App\Core\Route;
-
+use App\Core\YamlParser as Yaml;
 
 class Router
 {
@@ -13,13 +13,33 @@ class Router
 
 
     /**
-     * Constructor for Router.
+     * Router Constructor.
      *
-     * Initializes the router by loading all route definitions from controllers.
+     * Initializes the router by loading all predefined route definitions.
+     * It loads routes from:
+     * - Controllers (via `loadRoutes()` method).
+     * - `config/routes.php` if it exists and is callable.
+     * - `config/routes.yaml` using a YAML parser.
+     * 
+     * The loaded routes are stored in `$this->routes`.
      */
     public function __construct()
     {
+        // get Routes from Atributes
         $this->routes = $this->loadRoutes();
+
+        // get Routes from /config/routes.php
+        $routesConfig = require __DIR__ . '/../config/routes.php';
+        if (is_callable($routesConfig)) {
+            $routesConfig($this);
+        }
+
+        // get Routes from /config/routes.yaml
+        $yamlRoutes = Yaml::parseFile(dirname(__DIR__) . '/config/routes.yaml');
+        foreach ($yamlRoutes as $name => $route) {
+            $this->add($name, $route['path'])
+                ->controller($route['controller'], $route['action']);
+        }
     }
 
     /**
@@ -71,6 +91,18 @@ class Router
                         'name' => $route->name, //route name => /path, name: 'something'
                     ];
                     if (isset($route->name)) {
+                        if (array_key_exists($route->name, $this->routesName)) {
+                            $element = $this->routesName[$route->name];
+                            $controller = $element['controller'];
+                            $action = $element['action'];
+                            $method_of_current_class = $method->getName();
+                            throw new \Exception(
+                                "Error 404: The route name '{$route->name}' is already in use. 
+                                Defined in: $controller::$action(). 
+                                Conflict detected in: $controllerClass::$method_of_current_class(). 
+                                Please choose a unique route name."
+                            );
+                        }
                         // store the name attributes
                         $this->routesName[$route->name] = end($routes);
                     }
@@ -135,5 +167,55 @@ class Router
             return $this->routesName[$name];
         }
         return null;
+    }
+
+    /**
+     * Adds a new route to the routing system.
+     *
+     * This method registers a route with a unique name, a specified path, and supported HTTP methods.
+     * If a route name already exists, an exception is thrown to enforce uniqueness.
+     *
+     * @param string $name The unique name of the route.
+     * @param string $path The URL path pattern for the route.
+     * @param array $methods The allowed HTTP methods for the route (default: GET).
+     * @return $this Returns the current Router instance for method chaining.
+     * 
+     * @throws \Exception If the route name is already in use, an error is thrown.
+     */
+    public function add($name, $path, $methods = ["GET"])
+    {
+        if (array_key_exists($name, $this->routesName)) {
+            $element = $this->routesName[$name];
+            $controller = $element['controller'];
+            $action = $element['action'];
+            throw new \Exception(
+                "Error 404: The route name '{$name}' is already in use. 
+                Defined in: $controller::$action(). 
+                Please choose a unique route name."
+            );
+        }
+        $this->routes[] = ['path' => $path, 'name' => $name, 'methods' => $methods];
+        return $this;
+    }
+
+    /**
+     * Associates a controller and method with the most recently added route.
+     *
+     * This method assigns a controller and method (action) to the last registered route.
+     * It also updates the `routesName` array for quick access by route name.
+     *
+     * @param string $controller The fully qualified class name of the controller.
+     * @param string $method_name The method in the controller that handles the route.
+     * @return $this Returns the current Router instance for method chaining.
+     */
+    public function controller($controller, $method_name)
+    {
+        $lastRoute = array_key_last($this->routes);
+        if ($lastRoute !== null) {
+            $this->routes[$lastRoute]['controller'] = $controller;
+            $this->routes[$lastRoute]['action'] = $method_name;
+            $this->routesName[$this->routes[$lastRoute]['name']] = end($this->routes);
+        }
+        return $this;
     }
 };

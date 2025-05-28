@@ -12,14 +12,4 @@ class Route
         public ?string $name = null,
         public array $methods = ['GET']
     ) {}
-
-    // public function setRoute($route, $name = null)
-    // {
-    //     $this->route = $route;
-    // }
-    // public function getRoute()
-
-    // {
-    //     return $this->route;
-    // }
 }

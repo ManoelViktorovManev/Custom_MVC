@@ -14,12 +14,7 @@ class ComposerStaticInit14abfd0927b2dca8e7f366d4941981d4
     public static $prefixLengthsPsr4 = array (
         'P' => 
         array (
-            'Psr\\Log\\' => 8,
             'PhpParser\\' => 10,
-        ),
-        'M' => 
-        array (
-            'Monolog\\' => 8,
         ),
         'D' => 
         array (
@@ -32,17 +27,9 @@ class ComposerStaticInit14abfd0927b2dca8e7f366d4941981d4
     );
 
     public static $prefixDirsPsr4 = array (
-        'Psr\\Log\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/psr/log/src',
-        ),
         'PhpParser\\' => 
         array (
             0 => __DIR__ . '/..' . '/nikic/php-parser/lib/PhpParser',
-        ),
-        'Monolog\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/monolog/monolog/src/Monolog',
         ),
         'DeepCopy\\' => 
         array (

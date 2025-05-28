@@ -46,7 +46,7 @@ class NewController extends BaseController
         //return new Response('asdf');
         return $this->redirect($url);
     }
-    #[Route('/db', name: 'asdf')]
+    #[Route('/db', name: 'izwajdane')]
     function DBTest()
     {
         $user = new User();
