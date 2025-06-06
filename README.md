@@ -2,6 +2,30 @@
 
 The project **Custom MVC** is PHP open-source web application MVC framework.  
 
+## Table of Content
+
+- [Installation and requirements](#installation-and-requirements)
+- [Project structure](#project-structure)
+- [Configuration and Setup](#configuration-and-setup)
+- [Routes](#routes)
+- [Controllers](#controllers)
+  - [Defining a Controller Method](#defining-a-controller-method)
+  - [Available Controller Methods](#available-controller-methods)
+    - [json(array $data)](#jsonarray-data)
+    - [render(string $view, array $params)](#renderstring-view-array-params)
+    - [redirectToRoute(string $routeName, array $param)](#redirecttoroutestring-routename-array-param)
+    - [redirect(string $url)](#redirectstring-url)
+    - [generateUrl(string $routeName, array $param)](#generateurlstring-routename-array-param)
+- [Models](#models)
+  - [Access the Database](#access-the-database)
+  - [Available Model Methods](#available-model-methods)
+    - [all(): array](#all-array)
+    - [first(): ?BaseModel](#first-basemodel)
+    - [where(array $inputs)](#wherearray-inputs)
+    - [order(array ...$inputs)](#orderarray-inputs)
+- [Views](#views)
+  - [Passing Data to Views](#passing-data-to-views)
+  - [Passing an Array to a View](#passing-an-array-to-a-view)
 ## Installation and requirements
 
 Clone the repository from GitHub or download it as a ZIP file:
@@ -32,7 +56,7 @@ project-root/
 │   └── Router.php
 │   └── BaseModel.php
 │
-├── models/              # Directory for user-defined models (entities), each extending BaseModel
+├── model/              # Directory for user-defined models (entities), each extending BaseModel
 │   └── User.php
 │
 ├── tests/               # Directory for unit and integration tests
@@ -53,11 +77,14 @@ project-root/
 
 1. **Edit the Configuration File**: Open the `.env` file in the project’s root directory and configure the following values:
    - **`DATABASE_URL`**: Defines the database connection string.
-   - **`LOCAL_TIMEZONE`**: Sets the timezone for log entries.
 
+Example **.env** file:
+```.env
+DATABASE_URL="scheme://user:pass@host:port/dbName"
+``` 
 2. **Start the Database**: Ensure your database application is running and accessible based on the DATABASE_URL configuration.
 
-3. **Run the Server**: In the terminal, navigate to your project directory and start the PHP server:
+3. **Run the Server**: In the terminal, navigate to your **project directory** and start the PHP server:
 ```
 php -S localhost:8080
 ```
@@ -169,38 +196,77 @@ class TestController extends BaseController
 ### Available Controller Methods
 The **BaseController** provides several helper methods that make it easier to handle common tasks, such as returning JSON responses, rendering templates, and generating URLs.
 
-### json(data)
+### json(array $data)
 Returns a JSON response. Use this to send structured data in JSON format. Returns **Response** object.
-```
-return $this->json(['status' => 'success', 'data' => $data]);
+```php
+#[Route('/jsonTest')]
+public function testingJsonResponse()
+{
+   // Example response
+   return $this->json(['status' => 'success', 'data' => $data]);
+}
 ```
 
-### render(view,params)
+### render(string $view, array $params)
 Renders a view template. This method takes the path to an HTML template and an optional array of variables to pass to the view. Returns **Response** object.
-```
-return $this->render('home.html');
-return $this->render('home.html', ['title' => 'Home Page']);
+
+```php
+#[Route('/renderTest')]
+public function testingRenderResponse()
+{
+   // Example response
+   return $this->render('home.html');
+}
+
+#[Route('/renderTest1')]
+public function testingRenderResponse1()
+{
+   // Example response
+   return $this->render('home.html', ['title' => 'Home Page']);
+}
 ```
 
-### redirectToRoute(routeName,param)
+### redirectToRoute(string $routeName, array $param)
 Redirects to a specified route by name. Useful for navigation within the application without hardcoding URLs. Returns **Response** object.
-```
-return $this->redirectToRoute('param'); // it will redirect to 'param' name route which is '/normal/test' path
+```php
+#[Route('/redirectToRouteTest')]
+public function testingRedirectToRouteResponse()
+{
+   // Example response
+   return $this->redirectToRoute('param'); // it will redirect to 'param' name route which is '/normal/test' path
+}
+
 ```
 
-### redirect(url)
+### redirect(string $url)
 Redirects the user to a specified URL. This method is useful for external redirects or when you want full control over the URL. Returns **Response** object.
-```
-return $this->redirect('https://example.com');
-return $this->redirect('/path');
+```php
+#[Route('/redirectTest')]
+public function testingRedirectResponse()
+{
+   // Example response
+   return $this->redirect('https://example.com');
+}
+
+#[Route('/redirectTest1')]
+public function testingRedirectResponse1()
+{
+   // Example response
+   return $this->redirect('/path');
+}
 ```
 
-### generateUrl(routeName,param)
+### generateUrl(string $routeName, array $param)
 Generates a URL for a named route. This method is particularly useful when you need to create a link to another route within the application, as it allows you to build URLs dynamically based on route names. Returns **String**.
+```php
+#[Route('/generateUrlTest')]
+public function testingGenerateUrlResponse()
+{
+   // Example response
+   $url = $this->generateUrl('user_profile', ['id' => 42]);
+   return $this->redirect($url);
+}
 ```
-$url = $this->generateUrl('user_profile', ['id' => 42]);
-```
-
 
 ## Models
 **Models (or Entities)** in this project are responsible for interacting with the database. They should be placed in the **/model** directory and must extend the **BaseModel** class to inherit the necessary database functionality.
