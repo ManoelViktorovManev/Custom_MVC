@@ -11,21 +11,27 @@ The project **Custom MVC** is PHP open-source web application MVC framework.
 - [Controllers](#controllers)
   - [Defining a Controller Method](#defining-a-controller-method)
   - [Available Controller Methods](#available-controller-methods)
-    - [json(array $data)](#jsonarray-data)
-    - [render(string $view, array $params)](#renderstring-view-array-params)
-    - [redirectToRoute(string $routeName, array $param)](#redirecttoroutestring-routename-array-param)
-    - [redirect(string $url)](#redirectstring-url)
-    - [generateUrl(string $routeName, array $param)](#generateurlstring-routename-array-param)
+    - [json(array $data): Response](#jsonarray-data)
+    - [render(string $view, array $params): Response](#renderstring-view-array-params)
+    - [redirectToRoute(string $routeName, array $param): Response](#redirecttoroutestring-routename-array-param)
+    - [redirect(string $url): Response](#redirectstring-url)
+    - [generateUrl(string $routeName, array $param): string](#generateurlstring-routename-array-param)
 - [Models](#models)
   - [Access the Database](#access-the-database)
-  - [Available Model Methods](#available-model-methods)
+    - [add(BaseModel $entity)](#add)
+    - [delete(BaseModel $entity)](#delete)
+    - [commit()](#commit)
+  - [Available Model Methods - QueryBuilder class](#available-model-methods-querybuilder-class)
     - [all(): array](#all-array)
     - [first(): ?BaseModel](#first-basemodel)
-    - [where(array $inputs)](#wherearray-inputs)
-    - [order(array ...$inputs)](#orderarray-inputs)
+    - [where(array $inputs): QueryBuilder](#wherearray-inputs)
+    - [order(array ...$inputs): QueryBuilder](#orderarray-inputs)
 - [Views](#views)
   - [Passing Data to Views](#passing-data-to-views)
   - [Passing an Array to a View](#passing-an-array-to-a-view)
+- [Tests](#tests)
+  - [Running all tests](#running-all-tests)
+  - [Running a Specific Test File](#running-a-specific-test-file)
 ## Installation and requirements
 
 Clone the repository from GitHub or download it as a ZIP file:
@@ -196,7 +202,7 @@ class TestController extends BaseController
 ### Available Controller Methods
 The **BaseController** provides several helper methods that make it easier to handle common tasks, such as returning JSON responses, rendering templates, and generating URLs.
 
-### json(array $data)
+### json(array $data): Response
 Returns a JSON response. Use this to send structured data in JSON format. Returns **Response** object.
 ```php
 #[Route('/jsonTest')]
@@ -207,7 +213,7 @@ public function testingJsonResponse()
 }
 ```
 
-### render(string $view, array $params)
+### render(string $view, array $params): Response
 Renders a view template. This method takes the path to an HTML template and an optional array of variables to pass to the view. Returns **Response** object.
 
 ```php
@@ -226,7 +232,7 @@ public function testingRenderResponse1()
 }
 ```
 
-### redirectToRoute(string $routeName, array $param)
+### redirectToRoute(string $routeName, array $param): Response
 Redirects to a specified route by name. Useful for navigation within the application without hardcoding URLs. Returns **Response** object.
 ```php
 #[Route('/redirectToRouteTest')]
@@ -238,7 +244,7 @@ public function testingRedirectToRouteResponse()
 
 ```
 
-### redirect(string $url)
+### redirect(string $url): Response
 Redirects the user to a specified URL. This method is useful for external redirects or when you want full control over the URL. Returns **Response** object.
 ```php
 #[Route('/redirectTest')]
@@ -256,7 +262,7 @@ public function testingRedirectResponse1()
 }
 ```
 
-### generateUrl(string $routeName, array $param)
+### generateUrl(string $routeName, array $param): string
 Generates a URL for a named route. This method is particularly useful when you need to create a link to another route within the application, as it allows you to build URLs dynamically based on route names. Returns **String**.
 ```php
 #[Route('/generateUrlTest')]
@@ -373,7 +379,7 @@ public function testCommitUser()
         return new Response("Successfuly commited without doing something");
     }
 ```
-### Available Model Methods
+### Available Model Methods - QueryBuilder class
 The BaseModel provides several helper methods for interacting with the database. These methods simplify common database operations. You can access them via using the **QueryBuilder class** by calling it this way:
 ```php
 class User;
@@ -473,4 +479,24 @@ Now, in the view, you can access the properties of the user array by referencing
 <p>User ID: {{ user.id }}</p>
 <p>Name: {{ user.name }}</p>
 <p>Email: {{ user.email }}</p>
+```
+## Tests
+In this MVC we have build in tests, which it can be find inside **/tests** folder. 
+
+### Running All Tests
+To run all tests, navigate to your project root in the terminal and execute:
+```
+vendor/bin/phpunit 
+```
+This command will automatically discover and run all test files in the **/tests** directory based on the configuration defined in **phpunit.xml.**
+
+### Running a Specific Test File
+To run a specific test file (e.g., a custom test), use the following command:
+```
+vendor/bin/phpunit path/to/YourTestFile.php
+```
+Example:
+```
+vendor/bin/phpunit ./tests/CustomPHPTest.php
+```
 ```
