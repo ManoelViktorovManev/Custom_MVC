@@ -19,15 +19,19 @@ The project **Custom MVC** is PHP open-source web application MVC framework.
     - [redirect(string $url): Response](#redirectstring-url-response)
     - [generateUrl(string $routeName, array $param): string](#generateurlstring-routename-array-param-string)
 - [Models](#models)
+  - [Functionality](#functionality)
+  - [Working with the Database](#working-with-the-database)
+  - [Automatic Database Setup](#️automatic-database-setup)
+  - [Example Model Class](#example-model-class)
+  - [Available Model Methods - QueryBuilder](#available-model-methods---querybuilder-class)
+    - [all(): array](#all-array)
+    - [first(): ?BaseModel](#first-basemodel)
+    - [where(array $inputs)](#wherearray-inputs)
+    - [order(array ...$inputs)](#orderarray-inputs)
   - [Access the Database](#access-the-database)
     - [add(BaseModel $entity)](#addbasemodel-entity)
     - [delete(BaseModel $entity)](#deletebasemodel-entity)
     - [commit()](#commit)
-  - [Available Model Methods - QueryBuilder class](#available-model-methods---querybuilder-class)
-    - [all(): array](#all-array)
-    - [first(): ?BaseModel](#first-basemodel)
-    - [where(array $inputs): QueryBuilder](#wherearray-inputs-querybuilder)
-    - [order(array ...$inputs): QueryBuilder](#orderarray-inputs-querybuilder)
 - [Views](#views)
   - [Passing Data to Views](#passing-data-to-views)
   - [Passing an Array to a View](#passing-an-array-to-a-view)
@@ -314,19 +318,62 @@ public function testingGenerateUrlResponse()
    return $this->redirect($url);
 }
 ```
-
 ## Models
-**Models (or Entities)** in this project are responsible for interacting with the database. They should be placed in the **/model** directory and must extend the **BaseModel** class to inherit the necessary database functionality.
 
-Each model should include an **id** parameter, which serves as the primary identifier for each record.
+**Models** (also referred to as **Entities**) in this project are responsible for defining the structure of your data and handling interactions with the database. Each model corresponds to a database table and should be placed in the `/model` directory.
 
-Example Model:
+All models **must extend the `BaseModel` class**, which provides built-in methods for common database operations. This inheritance ensures a consistent and efficient way to interact with the database throughout the project.
+
+---
+
+### Functionality
+
+By extending `BaseModel`, each model gains access to the powerful `query()` method, which provides a fluent interface for database queries. Common query methods include:
+
+- `all(): array` – Retrieve all records
+- `first(): ?BaseModel` – Fetch the first matching result
+- `where(array $inputs): QueryBuilder` – Add filtering conditions
+- `order(array $inputs): QueryBuilder` – Sort query results
+
+These allow you to build expressive and readable database queries directly from your model classes.
+
+---
+
+### Working with the Database
+
+You can also interact with the database directly from controllers using the `DbManipulation` class. This class provides methods for:
+
+- Inserting new records
+- Updating existing data
+- Deleting records
+
+This enables flexible database manipulation wherever needed within your application logic.
+
+---
+
+### Automatic Database Setup
+
+No manual database setup is required. The system will automatically generate the database and corresponding tables based on:
+
+- The `DATABASE_URL` value set in your `.env` file
+- The structure of your model classes in the `/model` directory
+
+This means you can focus on defining your models and let the framework handle the rest.
+
+### Example Model class:
+It will be good if you defined **getters and setters** to every Model class.
 ```php
+<?php
+
+namespace App\Model;
+
+use App\Core\BaseModel;
+
 class User extends BaseModel
 {
-    private $id;
-    private $name;
-    private $email;
+    private ?int $id;
+    private string $name;
+    private string $email;
 
     // Getters and setters for properties...
     public function __construct($id = null, $name = '', $email = '')
@@ -335,136 +382,169 @@ class User extends BaseModel
         $this->name = $name;
         $this->email = $email;
     }
+     public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public function setId(int $id): void
+    {
+        $this->id = $id;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): void
+    {
+        $this->email = $email;
+    }
 }
 ```
+
 In controller you can access it by this:
 ```php
-#[Route('/normal/test')]
-public function testingNormalResponse()
+#[Route('/accessUser')]
+public function accessEntity()
 {
-    // Example response
+    $user = new User();       
+    return new Response("Access entity");
+}
+```
+### Available Model Methods - QueryBuilder class
+The BaseModel provides several helper methods for interacting with the database. These methods simplify common database operations. You can access them via using the **QueryBuilder class** by calling it this way:
+```php
+#[Route('/accessUserQuery')]
+public function accessEntityQuery()
+{
     $user = new User();
-    $user->setName('test'); // setter
-    $user->setEmail('test@gmail.com'); //setter
-        
-    return new Response('Test text');
+    $user_query = $user->query();
+    return new Response("Access entity query");
+}
+```
+This class have several methods:
+### all(): array
+Retrieves all records from the associated table.
+```php
+#[Route('/accessAllUsers')]
+public function accessAllUsers()
+{
+    $user = new User();
+    $all_users = $user->query()->all();
+    print_r($all_users);
+    return new Response("Access all users ");
+}
+```
+
+### first(): ?BaseModel
+Get first finded record.
+```php
+#[Route('/accessfirstUser')]
+public function accessfirstUser()
+{
+    $user = new User();
+    $user->query()->first();
+    return $this->json([$user->getId(), $user->getName(), $user->getEmail()]);
+}
+```
+### where(array $inputs)
+It performs an sql **WHERE** operation. It have three inputs in the array: **key, operation and value**. The first element is which **row** to look into the table. The allowed **operations** are: **'=', '!=', '<', '>', '<=', '>=' and 'LIKE'**. And the **value** is the looking value from the row.
+```php
+#[Route('/accessWhereUser')]
+public function accessWhereUser()
+{
+    $user = new User();
+    $user->query()->where(['name', '=', "TEST"])->first();
+
+    return $this->json([$user->getId(), $user->getName(), $user->getEmail()]);
+}
+```
+### order(array ...$inputs)
+It performs an sql **ORDER BY** operation. By default it is **ASC**. It have two inputs in the array: **order by and how to order (it is not mandatory)**. It can take multiple arrays. 
+```php
+#[Route('/accessOrderUser')]
+public function accessOrderUser()
+{
+    $users = new User();
+    $all_users = $users->query()->order(["name"])->first();
+    print_r($all_users);
+    return new Response("Successfuly order");
 }
 ```
 ### Access the Database
 You can access the database by getting an instance from **DbManipulation class**. Here is an example:
 ```php
-#[Route('/dbtest')]
-public function testingNormalResponse()
+#[Route('/accessDB')]
+public function accessDB()
 {
     $db = new DbManipulation();
-    // Example response
-    $user = new User();
-    $user->setName('test'); // setter
-    $user->setEmail('test@gmail.com'); //setter
-        
-    return new Response('Test text');
+    return new Response('Test DB access');
 }
 ```
 By this class you can create, delete and update an existing model instance. You can call this methods:
 ### add(BaseModel $entity)
 It adds an model instance to the queue for performance of insert or update element from Database.
 ```php
+#[Route('/updateDB')]
 public function testUpdateUser()
-    {
+{
+    $db = new DbManipulation();
+    $user = new User();
+    $user->query()->where(['name', '=', "NISAAN"])->first();
+    $user->setName("fff");
+    $db->add($user);
+    $db->commit();
+    return new Response("Successfuly updated an existing record");
+}
 
-        $db = new Db();
-        $user = new User();
-        $user->query()->where(['name', '=', "NISAAN"])->first();
-        $user->setName("fff");
-        $db->add($user);
-        $db->commit();
-        return new Response("Successfuly updated an existing record");
-    }
-
+#[Route('/insertDB')]
 public function testInserteUser()
-    {
-
-        $db = new Db();
-        $user = new User();
-        $user->setName("Test");
-        $user->setAge(123);
-        $db->add($user);
-        $db->commit();
-        return new Response("Successfuly insert a new record");
-    }
+{
+    $db = new DbManipulation();
+    $user = new User(null, "NISAAN", "test@gmail.com");
+    $db->add($user);
+    $db->commit();
+    return new Response("Successfuly insert a new record");
+}
 ```
  
 ### delete(BaseModel $entity)
 It adds an model instance to the queue for performance of delete element from Database.
 ```php
-public function testUser()
-    {
-
-        $db = new Db();
-        $user = new User();
-        $user->query()->where(['name', '=', "NISAAN"])->first();
-        $db->delete($user);
-        $db->commit();
-        return new Response("Successfuly deleted");
-    }
+#[Route('/deleteDB')]
+public function testDeleteUser()
+{
+    $db = new DbManipulation();
+    $user = new User();
+    $user->query()->where(['name', '=', "fff"])->first();
+    $db->delete($user);
+    $db->commit();
+    return new Response("Successfuly deleted");
+}
 ```
 
 ### commit()
-It performs all inserted into the queue actions for update/insert and delete.
+It performs all inserted into the queue actions for **update/insert and delete.**
 ```php
+#[Route('/commitDB')]
 public function testCommitUser()
-    {
-
-        $db = new Db();
-        $db->commit();
-        return new Response("Successfuly commited without doing something");
-    }
-```
-### Available Model Methods - QueryBuilder class
-The BaseModel provides several helper methods for interacting with the database. These methods simplify common database operations. You can access them via using the **QueryBuilder class** by calling it this way:
-```php
-class User;
-user->query();
-```
-This class have several methods:
-### all(): array
-Retrieves all records from the associated table.
-```php
-$users = $user-query->all();
-```
-
-### first(): ?BaseModel
-Get first finded record.
-```php
-$user = $user->query->first();
-```
-### where(array $inputs)
-It performs an sql **WHERE** operation. It have three inputs in the array: **key, operation and value**. The first element is which **row** to look into the table. The allowed **operations** are: **'=', '!=', '<', '>', '<=', '>=' and 'LIKE'**. And the **value** is the looking value from the row.
-```php
-public function testUser()
-    {
-
-        $db = new Db();
-        $user = new User();
-        $user->query()->where(['name', '=', "NISAAN"])->first();
-        $db->delete($user);
-        $db->commit();
-        return new Response("Successfuly deleted");
-    }
-```
-### order(array ...$inputs)
-It performs an sql **ORDER BY** operation. By default it is **ASC**. It have two inputs in the array: **order by and how to order (it is not mandatory)**. It can take multiple arrays. 
-```php
-public function testUser()
-    {
-
-        $db = new Db();
-        $user = new User();
-        $user->query()->where(['name', '=', "NISAAN"])->order(["name","DESC"],["age"]).first();
-        $db->delete($user);
-        $db->commit();
-        return new Response("Successfuly deleted");
-    }
+{
+    $db = new DbManipulation();
+    $db->commit();
+    return new Response("Successfuly commited without doing something");
+}
 ```
 ## Views
 

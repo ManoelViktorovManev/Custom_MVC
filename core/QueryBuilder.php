@@ -36,7 +36,8 @@ class QueryBuilder
     }
     public function first(): ?BaseModel
     {
-        $stmt = $this->buildAndExecuteSTMT($this->sql);
+        $sql = $this->sql ?: "SELECT * FROM {$this->modelClassTable} LIMIT 1";
+        $stmt = $this->buildAndExecuteSTMT($sql);
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$result) {
             return null; // Nothing found
@@ -88,6 +89,11 @@ class QueryBuilder
             }
             $orders[] = "$key $value";
         }
+
+        if (empty($this->sql)) {
+            $this->sql = "SELECT * FROM {$this->modelClassTable}";
+        }
+
         $this->sql .= " ORDER BY " . implode(", ", $orders);
         return $this;
     }
