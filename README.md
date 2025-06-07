@@ -9,29 +9,25 @@ The project **Custom MVC** is PHP open-source web application MVC framework.
 - [Configuration and Setup](#configuration-and-setup)
 - [Routes](#routes)
   - [Defining Routes with Attributes (PHP 8+)](#defining-routes-with-attributes-php-8)
-    - [Example](#example)
   - [Defining Routes with Config Files (For Older PHP Versions)](#defining-routes-with-config-files-for-older-php-versions)
-    - [Example: routes.php](#example-routesphp)
-    - [Example: routes.yaml](#example-routesyaml)
-    - [Corresponding Controller](#corresponding-controller)
 - [Controllers](#controllers)
   - [Defining a Controller Method](#defining-a-controller-method)
   - [Available Controller Methods](#available-controller-methods)
-    - [json(array $data): Response](#jsonarray-data)
-    - [render(string $view, array $params): Response](#renderstring-view-array-params)
-    - [redirectToRoute(string $routeName, array $param): Response](#redirecttoroutestring-routename-array-param)
-    - [redirect(string $url): Response](#redirectstring-url)
-    - [generateUrl(string $routeName, array $param): string](#generateurlstring-routename-array-param)
+    - [json(array $data): Response](#jsonarray-data-response)
+    - [render(string $view, array $params): Response](#renderstring-view-array-params-response)
+    - [redirectToRoute(string $routeName, array $param): Response](#redirecttoroutestring-routename-array-param-response)
+    - [redirect(string $url): Response](#redirectstring-url-response)
+    - [generateUrl(string $routeName, array $param): string](#generateurlstring-routename-array-param-string)
 - [Models](#models)
   - [Access the Database](#access-the-database)
-    - [add(BaseModel $entity)](#add)
-    - [delete(BaseModel $entity)](#delete)
+    - [add(BaseModel $entity)](#addbasemodel-entity)
+    - [delete(BaseModel $entity)](#deletebasemodel-entity)
     - [commit()](#commit)
-  - [Available Model Methods - QueryBuilder class](#available-model-methods-querybuilder-class)
+  - [Available Model Methods - QueryBuilder class](#available-model-methods---querybuilder-class)
     - [all(): array](#all-array)
     - [first(): ?BaseModel](#first-basemodel)
-    - [where(array $inputs): QueryBuilder](#wherearray-inputs)
-    - [order(array ...$inputs): QueryBuilder](#orderarray-inputs)
+    - [where(array $inputs): QueryBuilder](#wherearray-inputs-querybuilder)
+    - [order(array ...$inputs): QueryBuilder](#orderarray-inputs-querybuilder)
 - [Views](#views)
   - [Passing Data to Views](#passing-data-to-views)
   - [Passing an Array to a View](#passing-an-array-to-a-view)
@@ -116,7 +112,6 @@ There are four common route definitions:
 #[Route('/normal/test', name: 'param')]   // Named route, useful for generating URLs programmatically.
 #[Route('/optional/{id?}')]               // Optional parameter, e.g., /optional/ or /optional/123.
 ```
-
 Example:
 ```php
 <?php
@@ -544,5 +539,4 @@ vendor/bin/phpunit path/to/YourTestFile.php
 Example:
 ```
 vendor/bin/phpunit ./tests/CustomPHPTest.php
-```
 ```
