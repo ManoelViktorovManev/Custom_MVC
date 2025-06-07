@@ -98,50 +98,94 @@ Your application should now be accessible at http://localhost:8080.
 
 
 ## Routes
-**Routes** in this project are defined using attributes within each method of the Controller classes. Each route attribute specifies the path and parameters for accessing that method, allowing the framework to map URLs to specific controller actions.
+**Routes** can be defined differently depending on your **PHP** version. If you're using **PHP 8 or later**, you can define routes using **Attributes.** For older versions, you can define routes using configuration files.
 
+### Defining Routes with Attributes (PHP 8+)
+In PHP 8 and above, you can use **attributes** to define routes directly on controller methods. Each route attribute maps a specific URL pattern to a controller action, enabling clean and declarative routing.
 
-
-
-There are four main types of routes you can define:
-```
+There are four common route definitions:
+```php
 #[Route('/path')]                         // Basic route with a fixed path.
 #[Route('/user/{id}')]                    // Route with a dynamic parameter, e.g., /user/123.
 #[Route('/normal/test', name: 'param')]   // Named route, useful for generating URLs programmatically.
 #[Route('/optional/{id?}')]               // Optional parameter, e.g., /optional/ or /optional/123.
 ```
-For older versions of PHP you can use the **config** folder to configurate the **Routes**. There are two ways to configurate the Routes from config files by updating: **routes.php** or **routes.yaml**.
 
-Here are example for boths:
+Example:
+```php
+<?php
+
+namespace App\Controller;
+
+use App\Core\BaseController;
+use App\Core\Route;
+use App\Core\Response;
+
+class NewController extends BaseController
+{
+    #[Route('/normal')]
+    public function testingNormalRoute()
+    {
+        // Example response
+        return new Response('Test Normal Route');
+    }
+
+    #[Route('/test/{id}')]
+    public function testingDynamicParameterRoute($id)
+    {
+        // Example response
+        return new Response('Test with number ' . $id);
+    }
+
+    #[Route('/normal/test', name: 'param')]
+    public function testingNamedRoute()
+    {
+        // Example response
+        return new Response('Test text with Named Route');
+    }
+
+    #[Route('/optional/{id?}')]
+    public function testingOptionalParameterRoute($id)
+    {
+        // Example response
+        return new Response('Test with optional ' . $id);
+    }
+}
+
+```
+### Defining Routes with Config Files (For Older PHP Versions)
+For PHP versions prior to **8**, routes can be defined in the **config** directory using either **routes.php or routes.yaml.** These files specify paths and their corresponding controllers and actions.
+
+Example: **routes.php**
 ```php
 # routes.php
 <?php
 namespace App\Config;
 
 use App\Core\Router;
-
+use App\Controller\NewController;
 return function (Router $routes): void {
-    # HOW SHOULD BE CALLED:
-    # $routes->add($name_of_route,$url_path)->controller($instance_of_controller_class,$action)
+    // Syntax: $routes->add(route_name, path)->controller(ControllerClass::class, 'methodName');
     $routes->add('izwajdane12', '/minus/{param1}/{param2}')
-        ->controller(NewPhpRouteImp::class, 'minusNa2Chisla');
+        ->controller(NewController::class, 'minusNa2Chisla');
 };
 ```
+Example: **routes.yaml**
 ```yaml
 # routes.yaml
 
-# How should be called
-# name: name of route 
-#  path: path to call 
-#  controller: Controller class 
-#  action: method to be called from Controller class
+# Format:
+# route_name:
+#   path: /your-path
+#   controller: FullyQualified\ControllerName
+#   action: methodName
 
 info:
   path: /phpInfo
-  controller: App\Controller\NewPhpRouteImp
+  controller: App\Controller\NewController
   action: phpInfo
 ```
-And here is how it looks like in the Controller class:
+Corresponding Controller:
 ```php
 <?php
 
@@ -150,28 +194,24 @@ namespace App\Controller;
 use App\Core\BaseController;
 use App\Core\Response;
 
-class NewPhpRouteImp extends BaseController
+class NewController extends BaseController
 {
     public function minusNa2Chisla($param1, $param2): Response
     {
-
         return $this->json([
-            'Param1' => $param1,
+            'param1' => $param1,
             'param2' => $param2,
-            "result" => $param1 - $param2
+            'result' => $param1 - $param2
         ]);
     }
+
     public function phpInfo(): Response
     {
-        return new Response(
-            phpinfo()
-        );
+        return new Response(phpinfo());
     }
-};
+}
 
 ```
-
-
 ## Controllers
 All controllers should be placed in the **/controller** directory. Each controller class should extend the **BaseController** class to gain access to the framework’s core functionality. Each controller method should return **Response** object.
 
