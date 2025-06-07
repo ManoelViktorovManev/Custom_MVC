@@ -21,7 +21,7 @@ The project **Custom MVC** is PHP open-source web application MVC framework.
 - [Models](#models)
   - [Functionality](#functionality)
   - [Working with the Database](#working-with-the-database)
-  - [Automatic Database Setup](#️automatic-database-setup)
+  - [Automatic Database Setup](#automatic-database-setup)
   - [Example Model Class](#example-model-class)
   - [Available Model Methods - QueryBuilder](#available-model-methods---querybuilder-class)
     - [all(): array](#all-array)
