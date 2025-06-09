@@ -7,6 +7,9 @@ The project **Custom MVC** is PHP open-source web application MVC framework.
 - [Installation and requirements](#installation-and-requirements)
 - [Project structure](#project-structure)
 - [Configuration and Setup](#configuration-and-setup)
+- [CLI Helper Tool](#cli-helper-tool)
+  - [How to Run](#how-to-run)
+  - [Commands](#commands)
 - [Routes](#routes)
   - [Defining Routes with Attributes (PHP 8+)](#defining-routes-with-attributes-php-8)
   - [Defining Routes with Config Files (For Older PHP Versions)](#defining-routes-with-config-files-for-older-php-versions)
@@ -101,6 +104,49 @@ DATABASE_URL="scheme://user:pass@host:port/dbName"
 php -S localhost:8080
 ```
 Your application should now be accessible at http://localhost:8080.
+
+## CLI Helper Tool
+This CLI tool provides a quick and interactive way to scaffold essential parts of your PHP MVC project — including **environment configuration, controllers, and models**.
+### How to Run
+Run the tool from your project’s root directory using:
+```
+php ./cli.php
+```
+You’ll be greeted with the following interactive menu:
+```
+php ./cli.php
+Mini CLI Tool
+
+Choose an option:
+1. Edit .env file
+2. Create a new Controller file
+3. Create a new Model file
+4. Exit
+Choice:
+```
+### Commands
+1. **Edit.env file** - Allows you to create or modify your project's .env file. For each variable:
+
+* Enter the key name (e.g., DB_HOST)
+* Enter its value (e.g., localhost)
+* Type EXIT to return to the main menu
+
+2. **Create a new Controller file** - Generates a basic controller class inside the **controller/** directory. You will:
+* Be prompted for a controller name
+* Automatically generate a namespaced PHP class that extends BaseController
+
+3. **Creates a new Model file** - Generates a model class in the **model/** directory. You'll be asked:
+
+* Model name
+* Property names and types
+* Whether each property is nullable
+
+**The tool then auto-generates:**
+* PHP class with properties
+* A constructor
+* Getters and setters
+
+4. **Exit** - Simply terminates the CLI tool.
 
 
 ## Routes
