@@ -141,7 +141,7 @@ Choice:
 * Property names and types
 * Whether each property is nullable
 
-**The tool then auto-generates:**
+  **The tool then auto-generates:**
 * PHP class with properties
 * A constructor
 * Getters and setters
