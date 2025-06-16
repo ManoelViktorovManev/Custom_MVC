@@ -11,12 +11,20 @@ class QueryBuilder
     private $sql;
     private $bindings;
     private BaseModel $model;
+    private bool $firstTimeWhere;
+    private bool $firstTimeOrder;
+    private int $countWhereStatements;
 
     public function __construct(BaseModel $model)
     {
         $this->model = $model;
         $this->modelClassTable = $this->model->getTable();
         $this->db = DataBaseComponent::getInstance()->getDB();
+        $this->sql = "SELECT * FROM {$this->modelClassTable}";
+        $this->firstTimeWhere = true;
+        $this->firstTimeOrder = true;
+        $this->countWhereStatements = 0;
+        $this->bindings = [];
     }
 
     private function buildAndExecuteSTMT($sql)
@@ -30,14 +38,15 @@ class QueryBuilder
     }
     public function all(): array
     {
-        $sql = $this->sql ?: "SELECT * FROM {$this->modelClassTable}";
-        $stmt = $this->buildAndExecuteSTMT($sql);
+        // $sql = $this->sql ?: "SELECT * FROM {$this->modelClassTable}";
+        $stmt = $this->buildAndExecuteSTMT($this->sql);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
     public function first(): ?BaseModel
     {
-        $sql = $this->sql ?: "SELECT * FROM {$this->modelClassTable} LIMIT 1";
-        $stmt = $this->buildAndExecuteSTMT($sql);
+        $this->sql .= " LIMIT 1";
+        // $sql = $this->sql ?: "SELECT * FROM {$this->modelClassTable} LIMIT 1";
+        $stmt = $this->buildAndExecuteSTMT($this->sql);
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$result) {
             return null; // Nothing found
@@ -63,13 +72,18 @@ class QueryBuilder
         if (!in_array($operation, $allowedOps)) {
             throw new \InvalidArgumentException("Invalid operation: $operation");
         }
-        $this->sql = "SELECT * FROM {$this->modelClassTable} WHERE {$key} {$operation} :value";
-        $this->bindings = [
-            ':value' => [
-                'value' => $value,
-                'type' => is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR
-            ]
+        if ($this->firstTimeWhere) {
+            $this->firstTimeWhere = false;
+            $this->sql .= " WHERE {$key} {$operation} :value{$this->countWhereStatements}";
+        } else {
+            $this->sql .= " {$key} {$operation} :value{$this->countWhereStatements}";
+        }
+        // $this->sql = "SELECT * FROM {$this->modelClassTable} WHERE {$key} {$operation} :value";
+        $this->bindings[":value{$this->countWhereStatements}"] = [
+            'value' => $value,
+            'type' => is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR
         ];
+        $this->countWhereStatements++;
         return $this;
     }
 
@@ -90,11 +104,29 @@ class QueryBuilder
             $orders[] = "$key $value";
         }
 
-        if (empty($this->sql)) {
-            $this->sql = "SELECT * FROM {$this->modelClassTable}";
+        // if (empty($this->sql)) {
+        //     $this->sql = "SELECT * FROM {$this->modelClassTable}";
+        // }
+
+        if ($this->firstTimeOrder) {
+            $this->firstTimeOrder = false;
+            $this->sql .= " ORDER BY " . implode(", ", $orders);
+        } else {
+            $this->sql .= " " . implode(", ", $orders);
         }
 
-        $this->sql .= " ORDER BY " . implode(", ", $orders);
+        // $this->sql .= " ORDER BY " . implode(", ", $orders);
+        return $this;
+    }
+    public function and()
+    {
+        // maybe check for errors?
+        $this->sql .= " AND ";
+        return $this;
+    }
+    public function or()
+    {
+        $this->sql .= " OR ";
         return $this;
     }
 };
