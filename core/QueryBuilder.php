@@ -36,28 +36,32 @@ class QueryBuilder
         $stmt->execute();
         return $stmt;
     }
-    public function all(): array
+    public function all($wantingInstances = false): array
     {
         $stmt = $this->buildAndExecuteSTMT($this->sql);
         $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        $instances = [];
-        foreach ($results as $result) {
-            $reflect = new \ReflectionClass($this->model);
-            $modelInstance = $reflect->newInstance(); // create a new model instance
+        if ($wantingInstances) {
+            $instances = [];
+            foreach ($results as $result) {
+                $reflect = new \ReflectionClass($this->model);
+                $modelInstance = $reflect->newInstance(); // create a new model instance
 
-            foreach ($result as $property => $value) {
-                if ($reflect->hasProperty($property)) {
-                    $prop = $reflect->getProperty($property);
-                    $prop->setAccessible(true);
-                    $prop->setValue($modelInstance, $value);
+                foreach ($result as $property => $value) {
+                    if ($reflect->hasProperty($property)) {
+                        $prop = $reflect->getProperty($property);
+                        $prop->setAccessible(true);
+                        $prop->setValue($modelInstance, $value);
+                    }
                 }
+
+                $instances[] = $modelInstance;
             }
 
-            $instances[] = $modelInstance;
+            return $instances;
+        } else {
+            return $results;
         }
-
-        return $instances;
     }
 
     public function first(): ?BaseModel
