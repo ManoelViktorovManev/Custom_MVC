@@ -38,18 +38,36 @@ class QueryBuilder
     }
     public function all(): array
     {
-        // $sql = $this->sql ?: "SELECT * FROM {$this->modelClassTable}";
         $stmt = $this->buildAndExecuteSTMT($this->sql);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $instances = [];
+        foreach ($results as $result) {
+            $reflect = new \ReflectionClass($this->model);
+            $modelInstance = $reflect->newInstance(); // create a new model instance
+
+            foreach ($result as $property => $value) {
+                if ($reflect->hasProperty($property)) {
+                    $prop = $reflect->getProperty($property);
+                    $prop->setAccessible(true);
+                    $prop->setValue($modelInstance, $value);
+                }
+            }
+
+            $instances[] = $modelInstance;
+        }
+
+        return $instances;
     }
+
     public function first(): ?BaseModel
     {
         $this->sql .= " LIMIT 1";
-        // $sql = $this->sql ?: "SELECT * FROM {$this->modelClassTable} LIMIT 1";
+
         $stmt = $this->buildAndExecuteSTMT($this->sql);
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
         if (!$result) {
-            return null; // Nothing found
+            return null;
         }
 
         $reflect = new \ReflectionClass($this->model);
@@ -78,7 +96,7 @@ class QueryBuilder
         } else {
             $this->sql .= " {$key} {$operation} :value{$this->countWhereStatements}";
         }
-        // $this->sql = "SELECT * FROM {$this->modelClassTable} WHERE {$key} {$operation} :value";
+
         $this->bindings[":value{$this->countWhereStatements}"] = [
             'value' => $value,
             'type' => is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR
@@ -104,10 +122,6 @@ class QueryBuilder
             $orders[] = "$key $value";
         }
 
-        // if (empty($this->sql)) {
-        //     $this->sql = "SELECT * FROM {$this->modelClassTable}";
-        // }
-
         if ($this->firstTimeOrder) {
             $this->firstTimeOrder = false;
             $this->sql .= " ORDER BY " . implode(", ", $orders);
@@ -115,12 +129,10 @@ class QueryBuilder
             $this->sql .= " " . implode(", ", $orders);
         }
 
-        // $this->sql .= " ORDER BY " . implode(", ", $orders);
         return $this;
     }
     public function and()
     {
-        // maybe check for errors?
         $this->sql .= " AND ";
         return $this;
     }
