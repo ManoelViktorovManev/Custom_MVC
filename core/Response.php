@@ -100,6 +100,8 @@ class Response
      */
     public function executeResponse()
     {
+        http_response_code($this->getStatusCode());
+
         foreach ($this->getHeader() as $name => $value) {
             header("$name: $value", true);
         }
