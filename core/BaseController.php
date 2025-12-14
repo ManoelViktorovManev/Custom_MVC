@@ -2,9 +2,6 @@
 
 namespace App\Core;
 
-use App\Core\Response;
-use Exception;
-
 abstract class BaseController
 {
 
@@ -103,7 +100,7 @@ abstract class BaseController
             return new Response('', 302, ['Location' => $path]);
         }
 
-        throw new Exception("The route name '$route' is not existing");
+        throw new \Exception("The route name '$route' is not existing");
     }
 
 
@@ -147,6 +144,6 @@ abstract class BaseController
             }
             return $path;
         }
-        throw new Exception("The route name '$route' is not existing");
+        throw new \Exception("The route name '$route' is not existing");
     }
 };

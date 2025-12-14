@@ -2,7 +2,6 @@
 
 namespace App\Core;
 
-
 class Response
 {
     protected $content;

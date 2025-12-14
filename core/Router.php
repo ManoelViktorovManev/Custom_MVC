@@ -2,8 +2,8 @@
 
 namespace App\Core;
 
-use App\Core\Route;
-use App\Core\YamlParser as Yaml;
+// use App\Core\Route;
+// use App\Core\YamlParser as Yaml;
 
 class Router
 {
@@ -35,7 +35,7 @@ class Router
         }
 
         // get Routes from /config/routes.yaml
-        $yamlRoutes = Yaml::parseFile(dirname(__DIR__) . '/config/routes.yaml');
+        $yamlRoutes = YamlParser::parseFile(dirname(__DIR__) . '/config/routes.yaml');
         foreach ($yamlRoutes as $name => $route) {
             $this->add($name, $route['path'])
                 ->controller($route['controller'], $route['action']);

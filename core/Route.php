@@ -6,7 +6,6 @@ namespace App\Core;
 class Route
 {
 
-    private $route;
     public function __construct(
         public string $path,
         public ?string $name = null,
