@@ -2,11 +2,6 @@
 
 namespace App\Core;
 
-use App\Core\Router;
-use App\Core\Response;
-
-use Exception;
-
 class App
 {
     private Router $router;
@@ -20,7 +15,7 @@ class App
             $this->entity = EntityManipulation::getInstance($this->dbComponent);
             $this->router = new Router();
             $this->checkForExistingResponse();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             echo "<h1>" . ($e->getMessage()) . "</h1>";
         }
     }
@@ -100,17 +95,14 @@ class App
 
             // We check if it returns Response object always
             if ($response instanceof Response) {
-                // $this->log->setMessage('info', "Successfully executet $controller_name::$functionToBeCalled() for route $path");
                 $this->executeResponse($response);
             } else {
                 // HANDLE IF RESPONSE IS NOT RESPONSE OBJECT
-                // $this->log->setMessage('error', "Class method $controller_name::$functionToBeCalled() for route $path is not returning Response object");
                 throw new \Exception("Class method $controller_name::$functionToBeCalled() for route $path is not returning Response object");
             }
             return;
         }
         // IF THERE IS NO SUCH FILE FINDED
-        // $this->log->setMessage('error', "Error 404: Not existing route $userRequestUrl");
         throw new \Exception("Error 404: Not existing route $userRequestUrl");
     }
 
