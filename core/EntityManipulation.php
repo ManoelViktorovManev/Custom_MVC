@@ -88,6 +88,7 @@ class EntityManipulation
                 'int' => 'INT',
                 'string' => 'VARCHAR(255)',
                 'bool' => 'BOOLEAN',
+                'float' => 'DECIMAL(16,8)',
                 default => 'TEXT'
             };
             $columns[] = "{$name} $columnType";

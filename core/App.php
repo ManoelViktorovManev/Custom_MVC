@@ -2,21 +2,24 @@
 
 namespace App\Core;
 
+
 class App
 {
     private Router $router;
     private DataBaseComponent $dbComponent;
-    private EntityManipulation $entity;
 
     public function __construct()
     {
         try {
             $this->dbComponent = DataBaseComponent::getInstance();
-            $this->entity = EntityManipulation::getInstance($this->dbComponent);
+            EntityManipulation::getInstance($this->dbComponent);
             $this->router = new Router();
             $this->checkForExistingResponse();
         } catch (\Exception $e) {
-            echo "<h1>" . ($e->getMessage()) . "</h1>";
+            $message = $e->getMessage();
+            error_log("\033[31m$message\033[0m");
+            $this->executeResponse(new Response($message, 404));
+            // echo "<h1>" . ($e->getMessage()) . "</h1>";
         }
     }
 
@@ -74,6 +77,11 @@ class App
 
         $userRequestUrl = $this->getServerRoute();
         $userRequestMethod = $this->getServerMethod();
+
+        if ($userRequestMethod == "OPTIONS") {
+            http_response_code(200);
+            exit;
+        }
         $route = $this->router->match($userRequestUrl, $userRequestMethod);
         /*
             $route can be:
@@ -90,20 +98,28 @@ class App
             // Call the controller method
             $response = call_user_func_array([$controller, $functionToBeCalled], $route['params']);
 
-            $controller_name = $route['route']['controller'];
-            $path = $route['route']['path'];
-
             // We check if it returns Response object always
             if ($response instanceof Response) {
+
+                // it is not succsessfull
+                if ($response->getStatusCode() >= 400) {
+                    $message = $response->getContent();
+                    error_log("\033[31m$message\033[0m");
+                }
                 $this->executeResponse($response);
             } else {
                 // HANDLE IF RESPONSE IS NOT RESPONSE OBJECT
-                throw new \Exception("Class method $controller_name::$functionToBeCalled() for route $path is not returning Response object");
+                $controller_name = $route['route']['controller'];
+                $path = $route['route']['path'];
+                error_log("\033[31mClass method $controller_name::$functionToBeCalled() for route $path is not returning Response object\033[0m");
+                $this->executeResponse(new Response("Class method $controller_name::$functionToBeCalled() for route $path is not returning Response object", 404));
             }
             return;
         }
         // IF THERE IS NO SUCH FILE FINDED
-        throw new \Exception("Error 404: Not existing route $userRequestUrl");
+
+        error_log("\033[31mNot existing route $userRequestUrl\033[0m");
+        $this->executeResponse(new Response("Error 404: Not existing route $userRequestUrl", 404));
     }
 
 

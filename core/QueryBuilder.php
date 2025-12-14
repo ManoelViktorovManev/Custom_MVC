@@ -36,6 +36,14 @@ class QueryBuilder
         $stmt->execute();
         return $stmt;
     }
+
+    public function select(string ...$columns)
+    {
+        $columnList = empty($columns) ? '*' : implode(', ', $columns);
+        $this->sql = "SELECT {$columnList} FROM {$this->modelClassTable}";
+        return $this;
+    }
+
     public function all($wantingInstances = false): array
     {
         $stmt = $this->buildAndExecuteSTMT($this->sql);
@@ -90,22 +98,50 @@ class QueryBuilder
     {
         [$key, $operation, $value] = $input;
 
-        $allowedOps = ['=', '!=', '<', '>', '<=', '>=', 'LIKE'];
+        $allowedOps = ['=', '!=', '<', '>', '<=', '>=', 'LIKE', 'IN', 'NOT IN', 'IS', 'IS NOT'];
         if (!in_array($operation, $allowedOps)) {
             throw new \InvalidArgumentException("Invalid operation: $operation");
         }
         if ($this->firstTimeWhere) {
             $this->firstTimeWhere = false;
-            $this->sql .= " WHERE {$key} {$operation} :value{$this->countWhereStatements}";
+            $this->sql .= " WHERE ";
         } else {
-            $this->sql .= " {$key} {$operation} :value{$this->countWhereStatements}";
+            $this->sql .= " ";
         }
 
-        $this->bindings[":value{$this->countWhereStatements}"] = [
-            'value' => $value,
-            'type' => is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR
-        ];
+        if (in_array($operation, ['IN', 'NOT IN'])) {
+            if (!is_array($value)) {
+                throw new \InvalidArgumentException("Value for IN/NOT IN must be an array.");
+            }
+            // Build placeholders
+            $placeholders = [];
+            foreach ($value as $i => $val) {
+                $placeholder = ":value{$this->countWhereStatements}_{$i}";
+                $placeholders[] = $placeholder;
+
+                $this->bindings[$placeholder] = [
+                    'value' => $val,
+                    'type' => is_int($val) ? \PDO::PARAM_INT : \PDO::PARAM_STR
+                ];
+            }
+
+            $placeholderList = implode(', ', $placeholders);
+            $this->sql .= "{$key} {$operation} ({$placeholderList})";
+        } else {
+            $placeholder = ":value{$this->countWhereStatements}";
+            $this->sql .= "{$key} {$operation} {$placeholder}";
+            $this->bindings[$placeholder] = [
+                'value' => $value,
+                'type' => is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR
+            ];
+        }
         $this->countWhereStatements++;
+        return $this;
+    }
+
+    public function join(string $typeJoin, string $table, string $sql)
+    {
+        $this->sql .= " {$typeJoin} JOIN {$table} ON {$sql} ";
         return $this;
     }
 
@@ -143,6 +179,34 @@ class QueryBuilder
     public function or()
     {
         $this->sql .= " OR ";
+        return $this;
+    }
+    public function raw(string $sql, array $bindings = []): array
+    {
+        $stmt = $this->db->prepare($sql);
+        foreach ($bindings as $key => $val) {
+            $stmt->bindValue($key, $val, is_int($val) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+    public function multiQuery(array $queries): array
+    {
+        $sql = implode('; ', $queries) . ';';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+
+        $results = [];
+        do {
+            $results[] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } while ($stmt->nextRowset());
+
+        return $results;
+    }
+    public function limit(int $numberOfElements, int $pageNumber): QueryBuilder
+    {
+        $calculateOffset = $pageNumber * $numberOfElements;
+        $this->sql .= " LIMIT {$numberOfElements} OFFSET {$calculateOffset}; ";
         return $this;
     }
 };
