@@ -8,6 +8,7 @@ namespace App\Core;
  * A simple YAML parser that converts YAML-formatted content into a PHP associative array.
  *
  * This class supports parsing YAML files with basic key-value pairs and nested structures.
+ * @since 2.0
  */
 class YamlParser
 {
@@ -17,6 +18,7 @@ class YamlParser
      * @param string $file_path The path to the YAML file.
      * @return array The parsed YAML content as an associative array.
      * @throws \Exception If the file does not exist.
+     * @since 2.0
      */
     public static function parseFile($file_path)
     {
@@ -38,6 +40,7 @@ class YamlParser
      *
      * @param string $content The YAML content as a string.
      * @return array The parsed data structure.
+     * @since 2.0
      */
     private static function parse($content)
     {

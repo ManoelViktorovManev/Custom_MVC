@@ -2,7 +2,24 @@
 
 namespace App\Core;
 
-
+/**
+ * Fluent SQL query builder for model-based database queries.
+ *
+ * This class provides a lightweight, chainable API for building and executing
+ * SQL queries tied to a specific {@see BaseModel}. It supports common query
+ * operations such as SELECT, WHERE, JOIN, ORDER BY, LIMIT, and raw SQL execution.
+ *
+ * Features:
+ * - Model-aware table resolution
+ * - Prepared statements with safe parameter binding
+ * - Fluent method chaining
+ * - Optional hydration of results into model instances
+ *
+ * This class is not intended to be used directly; it is typically accessed
+ * via {@see BaseModel::query()}.
+ *
+ * @since 2.0
+ */
 class QueryBuilder
 {
 
@@ -15,6 +32,15 @@ class QueryBuilder
     private bool $firstTimeOrder;
     private int $countWhereStatements;
 
+    /**
+     * Initializes the query builder for a specific model.
+     *
+     * Sets up the base SELECT query and prepares internal state
+     * for building SQL clauses.
+     *
+     * @param BaseModel $model The model instance associated with the query.
+     * @since 2.0
+     */
     public function __construct(BaseModel $model)
     {
         $this->model = $model;
@@ -27,6 +53,13 @@ class QueryBuilder
         $this->bindings = [];
     }
 
+    /**
+     * Prepares and executes a PDO statement with bound parameters.
+     *
+     * @param string $sql Final SQL query string.
+     * @return \PDOStatement Executed PDO statement.
+     * @since 2.0
+     */
     private function buildAndExecuteSTMT($sql)
     {
         $stmt = $this->db->prepare($sql);
@@ -37,6 +70,15 @@ class QueryBuilder
         return $stmt;
     }
 
+    /**
+     * Specifies the columns to select.
+     *
+     * If no columns are provided, all columns (*) are selected.
+     *
+     * @param string ...$columns Column names to select.
+     * @return QueryBuilder Fluent query builder instance.
+     * @since 3.0
+     */
     public function select(string ...$columns)
     {
         $columnList = empty($columns) ? '*' : implode(', ', $columns);
@@ -44,6 +86,16 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Executes the query and returns all results.
+     *
+     * Results can be returned either as associative arrays or
+     * hydrated model instances.
+     *
+     * @param bool $wantingInstances Whether to return model instances.
+     * @return array Result set.
+     * @since 2.0
+     */
     public function all($wantingInstances = false): array
     {
         $stmt = $this->buildAndExecuteSTMT($this->sql);
@@ -72,6 +124,15 @@ class QueryBuilder
         }
     }
 
+    /**
+     * Executes the query and returns the first result as a model instance.
+     *
+     * Adds a LIMIT 1 clause to the query. Returns null if
+     * no result is found.
+     *
+     * @return BaseModel|null The hydrated model or null.
+     * @since 2.0
+     */
     public function first(): ?BaseModel
     {
         $this->sql .= " LIMIT 1";
@@ -94,6 +155,20 @@ class QueryBuilder
         return $this->model;
     }
 
+    /**
+     * Adds a WHERE condition to the query.
+     *
+     * Expected input format:
+     * [column, operator, value]
+     *
+     * Supported operators include:
+     * =, !=, <, >, <=, >=, LIKE, IN, NOT IN, IS, IS NOT
+     *
+     * @param array $input WHERE condition definition.
+     * @return QueryBuilder Fluent query builder instance.
+     * @throws \InvalidArgumentException On invalid operator or input.
+     * @since 2.0
+     */
     public function where(array $input)
     {
         [$key, $operation, $value] = $input;
@@ -139,12 +214,34 @@ class QueryBuilder
         return $this;
     }
 
+    /**
+     * Adds a JOIN clause to the query.
+     *
+     * @param string $typeJoin JOIN type (INNER, LEFT, RIGHT).
+     * @param string $table Table to join.
+     * @param string $sql Join condition.
+     * @return QueryBuilder Fluent query builder instance.
+     * @since 3.0
+     */
     public function join(string $typeJoin, string $table, string $sql)
     {
         $this->sql .= " {$typeJoin} JOIN {$table} ON {$sql} ";
         return $this;
     }
 
+    /**
+     * Adds ORDER BY clauses to the query.
+     *
+     * Each input should be an array of:
+     * [column, direction]
+     *
+     * Direction defaults to ASC.
+     *
+     * @param array ...$inputs Sorting definitions.
+     * @return QueryBuilder Fluent query builder instance.
+     * @throws \InvalidArgumentException On invalid sort direction.
+     * @since 2.0
+     */
     public function order(array ...$inputs)
     {
         $default_value = "ASC";
@@ -171,16 +268,39 @@ class QueryBuilder
 
         return $this;
     }
+
+    /**
+     * Adds an AND logical operator to the WHERE clause.
+     *
+     * @return QueryBuilder Fluent query builder instance.
+     * @since 3.0
+     */
     public function and()
     {
         $this->sql .= " AND ";
         return $this;
     }
+
+    /**
+     * Adds an OR logical operator to the WHERE clause.
+     *
+     * @return QueryBuilder Fluent query builder instance.
+     * @since 3.0
+     */
     public function or()
     {
         $this->sql .= " OR ";
         return $this;
     }
+
+    /**
+     * Executes a raw SQL query.
+     *
+     * @param string $sql Raw SQL string.
+     * @param array $bindings Optional bound parameters.
+     * @return array Query results as associative arrays.
+     * @since 3.0
+     */
     public function raw(string $sql, array $bindings = []): array
     {
         $stmt = $this->db->prepare($sql);
@@ -190,6 +310,14 @@ class QueryBuilder
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Executes multiple SQL queries in a single call.
+     *
+     * @param array $queries List of SQL queries.
+     * @return array Results for each query.
+     * @since 3.0
+     */
     public function multiQuery(array $queries): array
     {
         $sql = implode('; ', $queries) . ';';
@@ -203,6 +331,15 @@ class QueryBuilder
 
         return $results;
     }
+
+    /**
+     * Adds pagination limits to the query.
+     *
+     * @param int $numberOfElements Number of records per page.
+     * @param int $pageNumber Page index (zero-based).
+     * @return QueryBuilder Fluent query builder instance.
+     * @since 3.0
+     */
     public function limit(int $numberOfElements, int $pageNumber): QueryBuilder
     {
         $calculateOffset = $pageNumber * $numberOfElements;

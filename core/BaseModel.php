@@ -12,7 +12,7 @@ abstract class BaseModel
      * to a table name in the database. By convention, each model represents one database table.
      *
      * @return string The name of the database table corresponding to the model.
-     *
+     * @since 1.0
      */
     public function getTable(): string
     {
@@ -21,6 +21,7 @@ abstract class BaseModel
         return strtolower($className); // e.g., 'User' => 'user', 'Post' => 'post'
     }
 
+    * @since 2.0
     public function query()
     {
         return new QueryBuilder($this, $this->getTable());

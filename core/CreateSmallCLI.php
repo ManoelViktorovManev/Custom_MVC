@@ -2,10 +2,35 @@
 
 namespace App\Core;
 
+/**
+ * Lightweight interactive CLI utility for project scaffolding and configuration.
+ *
+ * This class provides a simple command-line interface that assists developers
+ * with common development tasks such as:
+ *
+ * - Editing the `.env` configuration file
+ * - Generating controller classes
+ * - Generating model classes with properties, constructor, and accessors
+ *
+ * The CLI runs in an interactive loop until the user chooses to exit.
+ * It is intended to be executed from the command line and not used
+ * in a web context.
+ *
+ * @since 3.0
+ */
 class CreateSmallCLI
 {
     private bool $runningStatus = true;
 
+    /**
+     * Starts the interactive CLI loop.
+     *
+     * Displays a menu of available actions and executes the selected
+     * command until the user chooses to exit the tool.
+     *
+     * @return void
+     * @since 3.0
+     */
     public function run()
     {
         while ($this->runningStatus == true) {
@@ -28,6 +53,17 @@ class CreateSmallCLI
             };
         }
     }
+
+    /**
+     * Interactive editor for the `.env` file.
+     *
+     * Allows users to create or update environment variables by
+     * entering key-value pairs. Existing keys are updated, while
+     * new keys are appended. Typing `EXIT` exits the editor.
+     *
+     * @return void
+     * @since 3.0
+     */
     private function editEnv()
     {
         $envPath = __DIR__ . '/../.env';
@@ -65,6 +101,17 @@ class CreateSmallCLI
             echo ".env updated.\n";
         }
     }
+
+    /**
+     * Generates a new controller class file.
+     *
+     * Prompts the user for a controller name and creates a PHP file
+     * extending {@see BaseController} in the controller directory.
+     * If the file already exists, the operation is aborted.
+     *
+     * @return void
+     * @since 3.0
+     */
     private function createController()
     {
         echo "Controller name: ";
@@ -93,6 +140,23 @@ class CreateSmallCLI
         file_put_contents($filePath, $template);
         echo "Controller created at: $filePath\n";
     }
+
+    /**
+     * Generates a new model class file interactively.
+     *
+     * Prompts the user for a model name and allows defining properties,
+     * their types, and nullability. The generated model:
+     *
+     * - Extends {@see BaseModel}
+     * - Includes private properties
+     * - Generates a constructor
+     * - Generates getters and setters
+     *
+     * Typing `EXIT` ends the property definition process.
+     *
+     * @return void
+     * @since 3.0
+     */
     private function createModels()
     {
         echo "Model name: ";
@@ -203,6 +267,15 @@ class CreateSmallCLI
         echo "✅ Model created at: $filePath\n";
     }
 
+    /**
+     * Converts a string to PascalCase for method naming.
+     *
+     * Used internally for generating getter and setter method names.
+     *
+     * @param string $str Property name
+     * @return string PascalCase string
+     * @since 3.0
+     */
     private function camel($str): string
     {
         return ucfirst($str);

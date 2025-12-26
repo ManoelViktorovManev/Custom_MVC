@@ -2,12 +2,34 @@
 
 namespace App\Core;
 
-
+/**
+ * Application core class responsible for bootstrapping the MVC workflow.
+ *
+ * This class initializes core components such as the database, entity layer,
+ * and router, then resolves the current HTTP request to a matching route.
+ * If a route is found, the corresponding controller action is executed and
+ * its response is sent to the client.
+ *
+ * @since   1.0
+ */
 class App
 {
     private Router $router;
     private DataBaseComponent $dbComponent;
 
+    /**
+     * App constructor.
+     *
+     * Initializes core application components:
+     * - Database connection
+     * - Entity manipulation layer
+     * - Router
+     *
+     * Then immediately attempts to resolve and execute the current request.
+     * Any exception thrown during initialization or routing is caught and
+     * returned as an HTTP 404 response.
+     * @since   1.0
+     */
     public function __construct()
     {
         try {
@@ -19,7 +41,6 @@ class App
             $message = $e->getMessage();
             error_log("\033[31m$message\033[0m");
             $this->executeResponse(new Response($message, 404));
-            // echo "<h1>" . ($e->getMessage()) . "</h1>";
         }
     }
 
@@ -31,6 +52,7 @@ class App
      *
      * @return string The requested URL path (e.g., "/home").
      *
+     * @since   1.0
      */
     public function getServerRoute()
     {
@@ -44,7 +66,7 @@ class App
      * It is useful for handling different types of requests and routing logic based on the request method.
      *
      * @return string The HTTP method of the current request (e.g., "GET", "POST").
-     *
+     * @since   1.0
      */
     public function getServerMethod()
     {
@@ -71,6 +93,7 @@ class App
      *      - Log a success message and execute the response.
      * - **Step 4**: If no matching route is found or an invalid response is returned, log an error and throw an exception.
      *
+     * @since   1.0
      */
     public function checkForExistingResponse()
     {
@@ -132,6 +155,7 @@ class App
      * @param Response $response The response object that will be executed.
      * 
      * @return void This function does not return any value.
+     * @since   1.0
      */
     public function executeResponse(Response $response)
     {
