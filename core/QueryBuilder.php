@@ -159,20 +159,20 @@ class QueryBuilder
      * Adds a WHERE condition to the query.
      *
      * Expected input format:
-     * [column, operator, value]
+     * ('column', 'operator', 'value')
      *
      * Supported operators include:
      * =, !=, <, >, <=, >=, LIKE, IN, NOT IN, IS, IS NOT
      *
-     * @param array $input WHERE condition definition.
+     * @param string $key looking field.
+     * @param string $operation for filter search.
+     * @param string $value looking value.
      * @return QueryBuilder Fluent query builder instance.
      * @throws \InvalidArgumentException On invalid operator or input.
      * @since 2.0
      */
-    public function where(array $input)
+    public function where(string $key, string $operation, string $value)
     {
-        [$key, $operation, $value] = $input;
-
         $allowedOps = ['=', '!=', '<', '>', '<=', '>=', 'LIKE', 'IN', 'NOT IN', 'IS', 'IS NOT'];
         if (!in_array($operation, $allowedOps)) {
             throw new \InvalidArgumentException("Invalid operation: $operation");
