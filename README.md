@@ -2,6 +2,52 @@
 
 The project **Custom MVC** is PHP open-source web application MVC framework.  
 
+## Table of Content
+
+- [Installation and requirements](#installation-and-requirements)
+- [Project structure](#project-structure)
+- [Configuration and Setup](#configuration-and-setup)
+- [CLI Helper Tool](#cli-helper-tool)
+  - [How to Run](#how-to-run)
+  - [Commands](#commands)
+- [Routes](#routes)
+  - [Defining Routes with Attributes (PHP 8+)](#defining-routes-with-attributes-php-8)
+  - [Defining Routes with Config Files (For Older PHP Versions)](#defining-routes-with-config-files-for-older-php-versions)
+- [Controllers](#controllers)
+  - [Defining a Controller Method](#defining-a-controller-method)
+  - [Available Controller Methods](#available-controller-methods)
+    - [json(array $data): Response](#jsonarray-data-response)
+    - [render(string $view, array $params): Response](#renderstring-view-array-params-response)
+    - [redirectToRoute(string $routeName, array $param): Response](#redirecttoroutestring-routename-array-param-response)
+    - [redirect(string $url): Response](#redirectstring-url-response)
+    - [generateUrl(string $routeName, array $param): string](#generateurlstring-routename-array-param-string)
+- [Models](#models)
+  - [Functionality](#functionality)
+  - [Working with the Database](#working-with-the-database)
+  - [Automatic Database Setup](#automatic-database-setup)
+  - [Example Model Class](#example-model-class)
+  - [Available Model Methods - QueryBuilder](#available-model-methods---querybuilder-class)
+    - [all(): array](#all-array)
+    - [first(): ?BaseModel](#first-basemodel)
+    - [where(string $key, string $operation, mixed $value)](#wherestring-key-string-operation-mixed-value)
+    - [and(): QueryBuilder](#and-querybuilder)
+    - [or(): QueryBuilder](#or-querybuilder)
+    - [select(string ...$columns): QueryBuilder](#selectstring-columns-querybuilder)
+    - [join(string $type, string $table, string $condition): QueryBuilder](#joinstring-type-string-table-string-condition-querybuilder)
+    - [order(array ...$inputs): QueryBuilder](#orderarray-inputs-querybuilder)
+    - [limit(int $limit, int $page): QueryBuilder](#limitint-limit-int-page-querybuilder)
+    - [raw(string $sql, array $bindings = []): QueryBuilder](#rawstring-sql-array-bindings-querybuilder)
+    - [multiQuery(array $queries): QueryBuilder](#multiqueryarray-queries-querybuilder)
+  - [Access the Database](#access-the-database)
+    - [add(BaseModel $entity)](#addbasemodel-entity)
+    - [delete(BaseModel $entity)](#deletebasemodel-entity)
+    - [commit()](#commit)
+- [Views](#views)
+  - [Passing Data to Views](#passing-data-to-views)
+  - [Passing an Array to a View](#passing-an-array-to-a-view)
+- [Tests](#tests)
+  - [Running all tests](#running-all-tests)
+  - [Running a Specific Test File](#running-a-specific-test-file)
 ## Installation and requirements
 
 Clone the repository from GitHub or download it as a ZIP file:
@@ -32,7 +78,7 @@ project-root/
 │   └── Router.php
 │   └── BaseModel.php
 │
-├── models/              # Directory for user-defined models (entities), each extending BaseModel
+├── model/              # Directory for user-defined models (entities), each extending BaseModel
 │   └── User.php
 │
 ├── tests/               # Directory for unit and integration tests
@@ -53,62 +99,151 @@ project-root/
 
 1. **Edit the Configuration File**: Open the `.env` file in the project’s root directory and configure the following values:
    - **`DATABASE_URL`**: Defines the database connection string.
-   - **`LOCAL_TIMEZONE`**: Sets the timezone for log entries.
 
+Example **.env** file:
+```.env
+DATABASE_URL="scheme://user:pass@host:port/dbName"
+``` 
 2. **Start the Database**: Ensure your database application is running and accessible based on the DATABASE_URL configuration.
 
-3. **Run the Server**: In the terminal, navigate to your project directory and start the PHP server:
+3. **Run the Server**: In the terminal, navigate to your **project directory** and start the PHP server:
 ```
 php -S localhost:8080
 ```
 Your application should now be accessible at http://localhost:8080.
 
+## CLI Helper Tool
+This CLI tool provides a quick and interactive way to scaffold essential parts of your PHP MVC project — including **environment configuration, controllers, and models**.
+### How to Run
+Run the tool from your project’s root directory using:
+```
+php ./cli.php
+```
+You’ll be greeted with the following interactive menu:
+```
+php ./cli.php
+Mini CLI Tool
+
+Choose an option:
+1. Edit .env file
+2. Create a new Controller file
+3. Create a new Model file
+4. Exit
+Choice:
+```
+### Commands
+1. **Edit.env file** - Allows you to create or modify your project's .env file. For each variable:
+
+* Enter the key name (e.g., DB_HOST)
+* Enter its value (e.g., localhost)
+* Type EXIT to return to the main menu
+
+2. **Create a new Controller file** - Generates a basic controller class inside the **controller/** directory. You will:
+* Be prompted for a controller name
+* Automatically generate a namespaced PHP class that extends BaseController
+
+3. **Creates a new Model file** - Generates a model class in the **model/** directory. You'll be asked:
+
+* Model name
+* Property names and types
+* Whether each property is nullable
+
+  **The tool then auto-generates:**
+* PHP class with properties
+* A constructor
+* Getters and setters
+
+4. **Exit** - Simply terminates the CLI tool.
+
 
 ## Routes
-**Routes** in this project are defined using attributes within each method of the Controller classes. Each route attribute specifies the path and parameters for accessing that method, allowing the framework to map URLs to specific controller actions.
+**Routes** can be defined differently depending on your **PHP** version. If you're using **PHP 8 or later**, you can define routes using **Attributes.** For older versions, you can define routes using configuration files.
 
+### Defining Routes with Attributes (PHP 8+)
+In PHP 8 and above, you can use **attributes** to define routes directly on controller methods. Each route attribute maps a specific URL pattern to a controller action, enabling clean and declarative routing.
 
-
-
-There are four main types of routes you can define:
-```
+There are four common route definitions:
+```php
 #[Route('/path')]                         // Basic route with a fixed path.
 #[Route('/user/{id}')]                    // Route with a dynamic parameter, e.g., /user/123.
 #[Route('/normal/test', name: 'param')]   // Named route, useful for generating URLs programmatically.
 #[Route('/optional/{id?}')]               // Optional parameter, e.g., /optional/ or /optional/123.
 ```
-For older versions of PHP you can use the **config** folder to configurate the **Routes**. There are two ways to configurate the Routes from config files by updating: **routes.php** or **routes.yaml**.
+Example:
+```php
+<?php
 
-Here are example for boths:
+namespace App\Controller;
+
+use App\Core\BaseController;
+use App\Core\Route;
+use App\Core\Response;
+
+class NewController extends BaseController
+{
+    #[Route('/normal')]
+    public function testingNormalRoute()
+    {
+        // Example response
+        return new Response('Test Normal Route');
+    }
+
+    #[Route('/test/{id}')]
+    public function testingDynamicParameterRoute($id)
+    {
+        // Example response
+        return new Response('Test with number ' . $id);
+    }
+
+    #[Route('/normal/test', name: 'param')]
+    public function testingNamedRoute()
+    {
+        // Example response
+        return new Response('Test text with Named Route');
+    }
+
+    #[Route('/optional/{id?}')]
+    public function testingOptionalParameterRoute($id)
+    {
+        // Example response
+        return new Response('Test with optional ' . $id);
+    }
+}
+
+```
+### Defining Routes with Config Files (For Older PHP Versions)
+For PHP versions prior to **8**, routes can be defined in the **config** directory using either **routes.php or routes.yaml.** These files specify paths and their corresponding controllers and actions.
+
+Example: **routes.php**
 ```php
 # routes.php
 <?php
 namespace App\Config;
 
 use App\Core\Router;
-
+use App\Controller\NewController;
 return function (Router $routes): void {
-    # HOW SHOULD BE CALLED:
-    # $routes->add($name_of_route,$url_path)->controller($instance_of_controller_class,$action)
+    // Syntax: $routes->add(route_name, path)->controller(ControllerClass::class, 'methodName');
     $routes->add('izwajdane12', '/minus/{param1}/{param2}')
-        ->controller(NewPhpRouteImp::class, 'minusNa2Chisla');
+        ->controller(NewController::class, 'minusNa2Chisla');
 };
 ```
+Example: **routes.yaml**
 ```yaml
 # routes.yaml
 
-# How should be called
-# name: name of route 
-#  path: path to call 
-#  controller: Controller class 
-#  action: method to be called from Controller class
+# Format:
+# route_name:
+#   path: /your-path
+#   controller: FullyQualified\ControllerName
+#   action: methodName
 
 info:
   path: /phpInfo
-  controller: App\Controller\NewPhpRouteImp
+  controller: App\Controller\NewController
   action: phpInfo
 ```
-And here is how it looks like in the Controller class:
+Corresponding Controller:
 ```php
 <?php
 
@@ -117,28 +252,24 @@ namespace App\Controller;
 use App\Core\BaseController;
 use App\Core\Response;
 
-class NewPhpRouteImp extends BaseController
+class NewController extends BaseController
 {
     public function minusNa2Chisla($param1, $param2): Response
     {
-
         return $this->json([
-            'Param1' => $param1,
+            'param1' => $param1,
             'param2' => $param2,
-            "result" => $param1 - $param2
+            'result' => $param1 - $param2
         ]);
     }
+
     public function phpInfo(): Response
     {
-        return new Response(
-            phpinfo()
-        );
+        return new Response(phpinfo());
     }
-};
+}
 
 ```
-
-
 ## Controllers
 All controllers should be placed in the **/controller** directory. Each controller class should extend the **BaseController** class to gain access to the framework’s core functionality. Each controller method should return **Response** object.
 
@@ -169,51 +300,140 @@ class TestController extends BaseController
 ### Available Controller Methods
 The **BaseController** provides several helper methods that make it easier to handle common tasks, such as returning JSON responses, rendering templates, and generating URLs.
 
-### json(data)
+### json(array $data): Response
 Returns a JSON response. Use this to send structured data in JSON format. Returns **Response** object.
-```
-return $this->json(['status' => 'success', 'data' => $data]);
-```
-
-### render(view,params)
-Renders a view template. This method takes the path to an HTML template and an optional array of variables to pass to the view. Returns **Response** object.
-```
-return $this->render('home.html');
-return $this->render('home.html', ['title' => 'Home Page']);
-```
-
-### redirectToRoute(routeName,param)
-Redirects to a specified route by name. Useful for navigation within the application without hardcoding URLs. Returns **Response** object.
-```
-return $this->redirectToRoute('param'); // it will redirect to 'param' name route which is '/normal/test' path
-```
-
-### redirect(url)
-Redirects the user to a specified URL. This method is useful for external redirects or when you want full control over the URL. Returns **Response** object.
-```
-return $this->redirect('https://example.com');
-return $this->redirect('/path');
-```
-
-### generateUrl(routeName,param)
-Generates a URL for a named route. This method is particularly useful when you need to create a link to another route within the application, as it allows you to build URLs dynamically based on route names. Returns **String**.
-```
-$url = $this->generateUrl('user_profile', ['id' => 42]);
-```
-
-
-## Models
-**Models (or Entities)** in this project are responsible for interacting with the database. They should be placed in the **/model** directory and must extend the **BaseModel** class to inherit the necessary database functionality.
-
-Each model should include an **id** parameter, which serves as the primary identifier for each record.
-
-Example Model:
 ```php
+#[Route('/jsonTest')]
+public function testingJsonResponse()
+{
+   // Example response
+   return $this->json(['status' => 'success', 'data' => $data]);
+}
+```
+
+### render(string $view, array $params): Response
+Renders a view template. This method takes the path to an HTML template and an optional array of variables to pass to the view. Returns **Response** object.
+
+```php
+#[Route('/renderTest')]
+public function testingRenderResponse()
+{
+   // Example response
+   return $this->render('home.html');
+}
+
+#[Route('/renderTest1')]
+public function testingRenderResponse1()
+{
+   // Example response
+   return $this->render('home.html', ['title' => 'Home Page']);
+}
+```
+
+### redirectToRoute(string $routeName, array $param): Response
+Redirects to a specified route by name. Useful for navigation within the application without hardcoding URLs. Returns **Response** object.
+```php
+#[Route('/redirectToRouteTest')]
+public function testingRedirectToRouteResponse()
+{
+   // Example response
+   return $this->redirectToRoute('param'); // it will redirect to 'param' name route which is '/normal/test' path
+}
+
+```
+
+### redirect(string $url): Response
+Redirects the user to a specified URL. This method is useful for external redirects or when you want full control over the URL. Returns **Response** object.
+```php
+#[Route('/redirectTest')]
+public function testingRedirectResponse()
+{
+   // Example response
+   return $this->redirect('https://example.com');
+}
+
+#[Route('/redirectTest1')]
+public function testingRedirectResponse1()
+{
+   // Example response
+   return $this->redirect('/path');
+}
+```
+
+### generateUrl(string $routeName, array $param): string
+Generates a URL for a named route. This method is particularly useful when you need to create a link to another route within the application, as it allows you to build URLs dynamically based on route names. Returns **String**.
+```php
+#[Route('/generateUrlTest')]
+public function testingGenerateUrlResponse()
+{
+   // Example response
+   $url = $this->generateUrl('user_profile', ['id' => 42]);
+   return $this->redirect($url);
+}
+```
+## Models
+
+**Models** (also referred to as **Entities**) in this project are responsible for defining the structure of your data and handling interactions with the database. Each model corresponds to a database table and should be placed in the `/model` directory.
+
+All models **must extend the `BaseModel` class**, which provides built-in methods for common database operations. This inheritance ensures a consistent and efficient way to interact with the database throughout the project.
+
+---
+
+### Functionality
+
+By extending `BaseModel`, each model gains access to the powerful `query()` method, which provides a fluent interface for database queries. Common query methods include:
+
+- `all(): array` – Retrieve all records
+- `first(): ?BaseModel` – Retrieve the first matching record and hydrate the model
+- `where(string $key, string $operation, mixed $value): QueryBuilder` – Add a WHERE condition
+- `and(): QueryBuilder` – Append an AND condition
+- `or(): QueryBuilder` – Append an OR condition
+- `select(string ...$columns): QueryBuilder` – Select specific columns
+- `join(string $type, string $table, string $condition): QueryBuilder` – Add JOIN clauses
+- `order(array ...$inputs): QueryBuilder` – Apply ORDER BY
+- `limit(int $limit, int $page): QueryBuilder` – Apply pagination
+- `raw(string $sql, array $bindings = []): QueryBuilder` – Execute raw SQL safely
+- `multiQuery(array $queries): QueryBuilder` – Execute multiple queries sequentially
+
+These allow you to build expressive and readable database queries directly from your model classes.
+
+---
+
+### Working with the Database
+
+You can also interact with the database directly from controllers using the `DbManipulation` class. This class provides methods for:
+
+- Inserting new records
+- Updating existing data
+- Deleting records
+
+This enables flexible database manipulation wherever needed within your application logic.
+
+---
+
+### Automatic Database Setup
+
+No manual database setup is required. The system will automatically generate the database and corresponding tables based on:
+
+- The `DATABASE_URL` value set in your `.env` file
+- The structure of your model classes in the `/model` directory
+
+This means you can focus on defining your models and let the framework handle the rest.
+
+### Example Model class:
+It will be good if you defined **getters and setters** to every Model class.
+```php
+<?php
+
+namespace App\Model;
+
+use App\Core\BaseModel;
+
 class User extends BaseModel
 {
-    private $id;
-    private $name;
-    private $email;
+    private ?int $id;
+    private string $name;
+    private string $email;
 
     // Getters and setters for properties...
     public function __construct($id = null, $name = '', $email = '')
@@ -222,136 +442,219 @@ class User extends BaseModel
         $this->name = $name;
         $this->email = $email;
     }
+     public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public function setId(int $id): void
+    {
+        $this->id = $id;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): void
+    {
+        $this->email = $email;
+    }
 }
 ```
+
 In controller you can access it by this:
 ```php
-#[Route('/normal/test')]
-public function testingNormalResponse()
+#[Route('/accessUser')]
+public function accessEntity()
 {
-    // Example response
-    $user = new User();
-    $user->setName('test'); // setter
-    $user->setEmail('test@gmail.com'); //setter
-        
-    return new Response('Test text');
+    $user = new User();       
+    return new Response("Access entity");
 }
 ```
+### Available Model Methods - QueryBuilder class
+The BaseModel provides several helper methods for interacting with the database. These methods simplify common database operations. You can access them via using the **QueryBuilder class** by calling it this way:
+```php
+#[Route('/accessUserQuery')]
+public function accessEntityQuery()
+{
+    $user = new User();
+    $user_query = $user->query();
+    return new Response("Access entity query");
+}
+```
+This class have several methods:
+### all(): array
+Retrieves all records from the associated table.
+```php
+#[Route('/accessAllUsers')]
+public function accessAllUsers()
+{
+    $user = new User();
+    $all_users = $user->query()->all();
+    print_r($all_users);
+    return new Response("Access all users ");
+}
+```
+
+### first(): ?BaseModel
+Get first finded record.
+```php
+#[Route('/accessfirstUser')]
+public function accessfirstUser()
+{
+    $user = new User();
+    $user->query()->first();
+    return $this->json([$user->getId(), $user->getName(), $user->getEmail()]);
+}
+```
+### where(string $key, string $operation, string $value)
+It performs an sql **WHERE** operation. It have three inputs: **key, operation and value**. The first element is which **row** to look into the table. The allowed **operations** are: **'=', '!=', '<', '>', '<=', '>=' and 'LIKE'**. And the **value** is the looking value from the row.
+```php
+#[Route('/accessWhereUser')]
+public function accessWhereUser()
+{
+    $user = new User();
+    $user->query()->where('name', '=', "TEST")->first();
+
+    return $this->json([$user->getId(), $user->getName(), $user->getEmail()]);
+}
+```
+### order(array ...$inputs)
+It performs an sql **ORDER BY** operation. By default it is **ASC**. It have two inputs in the array: **order by and how to order (it is not mandatory)**. It can take multiple arrays. 
+```php
+#[Route('/accessOrderUser')]
+public function accessOrderUser()
+{
+    $users = new User();
+    $all_users = $users->query()->order(["name"])->first();
+    print_r($all_users);
+    return new Response("Successfuly order");
+}
+```
+### select(string ...$colums)
+Append an **SELECT** condition to the selected **ModelClass**
+```php
+$user->query()
+     ->select('name','id')
+     ->where('id', '>', '20')
+     ->all()
+```
+
+### join(string $typeJoin, string $table, string $sql)
+Adds a **SQL JOIN** clause.
+```php
+$user->query()
+     ->where('name', '=', 'John')
+     ->join("Inner", "Post","something")
+     ->first();
+```
+### and(): QueryBuilder`
+Appends an **AND** condition to the previous WHERE clause.
+
+```php
+$user->query()
+     ->where('name', '=', 'John')
+     ->and()
+     ->where('email', 'LIKE', '%@gmail.com')
+     ->first();
+```
+
+### or(): QueryBuilder
+
+Appends an **OR** condition to the previous WHERE clause.
+
+```php
+$user->query()
+     ->where('name', '=', 'John')
+     ->or()
+     ->where('name', '=', 'Jane')
+     ->all();
+```
+
+### raw(string $sql, array $bindings)
+Executes a raw SQL query with optional parameter binding.
+
+### multiQuery(array $queries)
+Executes multiple queries sequentially.
+
+
+### limit(int $numberOfElements, int $pageNumber)
+Limits the number of results and supports pagination.
+
 ### Access the Database
 You can access the database by getting an instance from **DbManipulation class**. Here is an example:
 ```php
-#[Route('/dbtest')]
-public function testingNormalResponse()
+#[Route('/accessDB')]
+public function accessDB()
 {
     $db = new DbManipulation();
-    // Example response
-    $user = new User();
-    $user->setName('test'); // setter
-    $user->setEmail('test@gmail.com'); //setter
-        
-    return new Response('Test text');
+    return new Response('Test DB access');
 }
 ```
 By this class you can create, delete and update an existing model instance. You can call this methods:
 ### add(BaseModel $entity)
 It adds an model instance to the queue for performance of insert or update element from Database.
 ```php
+#[Route('/updateDB')]
 public function testUpdateUser()
-    {
+{
+    $db = new DbManipulation();
+    $user = new User();
+    $user->query()->where(['name', '=', "NISAAN"])->first();
+    $user->setName("fff");
+    $db->add($user);
+    $db->commit();
+    return new Response("Successfuly updated an existing record");
+}
 
-        $db = new Db();
-        $user = new User();
-        $user->query()->where(['name', '=', "NISAAN"])->first();
-        $user->setName("fff");
-        $db->add($user);
-        $db->commit();
-        return new Response("Successfuly updated an existing record");
-    }
-
+#[Route('/insertDB')]
 public function testInserteUser()
-    {
-
-        $db = new Db();
-        $user = new User();
-        $user->setName("Test");
-        $user->setAge(123);
-        $db->add($user);
-        $db->commit();
-        return new Response("Successfuly insert a new record");
-    }
+{
+    $db = new DbManipulation();
+    $user = new User(null, "NISAAN", "test@gmail.com");
+    $db->add($user);
+    $db->commit();
+    return new Response("Successfuly insert a new record");
+}
 ```
  
 ### delete(BaseModel $entity)
 It adds an model instance to the queue for performance of delete element from Database.
 ```php
-public function testUser()
-    {
-
-        $db = new Db();
-        $user = new User();
-        $user->query()->where(['name', '=', "NISAAN"])->first();
-        $db->delete($user);
-        $db->commit();
-        return new Response("Successfuly deleted");
-    }
+#[Route('/deleteDB')]
+public function testDeleteUser()
+{
+    $db = new DbManipulation();
+    $user = new User();
+    $user->query()->where(['name', '=', "fff"])->first();
+    $db->delete($user);
+    $db->commit();
+    return new Response("Successfuly deleted");
+}
 ```
 
 ### commit()
-It performs all inserted into the queue actions for update/insert and delete.
+It performs all inserted into the queue actions for **update/insert and delete.**
 ```php
+#[Route('/commitDB')]
 public function testCommitUser()
-    {
-
-        $db = new Db();
-        $db->commit();
-        return new Response("Successfuly commited without doing something");
-    }
-```
-### Available Model Methods
-The BaseModel provides several helper methods for interacting with the database. These methods simplify common database operations. You can access them via using the **QueryBuilder class** by calling it this way:
-```php
-class User;
-user->query();
-```
-This class have several methods:
-### all(): array
-Retrieves all records from the associated table.
-```php
-$users = $user-query->all();
-```
-
-### first(): ?BaseModel
-Get first finded record.
-```php
-$user = $user->query->first();
-```
-### where(array $inputs)
-It performs an sql **WHERE** operation. It have three inputs in the array: **key, operation and value**. The first element is which **row** to look into the table. The allowed **operations** are: **'=', '!=', '<', '>', '<=', '>=' and 'LIKE'**. And the **value** is the looking value from the row.
-```php
-public function testUser()
-    {
-
-        $db = new Db();
-        $user = new User();
-        $user->query()->where(['name', '=', "NISAAN"])->first();
-        $db->delete($user);
-        $db->commit();
-        return new Response("Successfuly deleted");
-    }
-```
-### order(array ...$inputs)
-It performs an sql **ORDER BY** operation. By default it is **ASC**. It have two inputs in the array: **order by and how to order (it is not mandatory)**. It can take multiple arrays. 
-```php
-public function testUser()
-    {
-
-        $db = new Db();
-        $user = new User();
-        $user->query()->where(['name', '=', "NISAAN"])->order(["name","DESC"],["age"]).first();
-        $db->delete($user);
-        $db->commit();
-        return new Response("Successfuly deleted");
-    }
+{
+    $db = new DbManipulation();
+    $db->commit();
+    return new Response("Successfuly commited without doing something");
+}
 ```
 ## Views
 
@@ -407,4 +710,23 @@ Now, in the view, you can access the properties of the user array by referencing
 <p>User ID: {{ user.id }}</p>
 <p>Name: {{ user.name }}</p>
 <p>Email: {{ user.email }}</p>
+```
+## Tests
+In this MVC we have build in tests, which it can be find inside **/tests** folder. 
+
+### Running All Tests
+To run all tests, navigate to your project root in the terminal and execute:
+```
+vendor/bin/phpunit 
+```
+This command will automatically discover and run all test files in the **/tests** directory based on the configuration defined in **phpunit.xml.**
+
+### Running a Specific Test File
+To run a specific test file (e.g., a custom test), use the following command:
+```
+vendor/bin/phpunit path/to/YourTestFile.php
+```
+Example:
+```
+vendor/bin/phpunit ./tests/CustomPHPTest.php
 ```

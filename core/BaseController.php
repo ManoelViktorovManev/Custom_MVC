@@ -2,9 +2,27 @@
 
 namespace App\Core;
 
-use App\Core\Response;
-use Exception;
-
+/**
+ * Base controller class for all application controllers.
+ *
+ * This abstract class provides common helper methods that can be used
+ * by all concrete controllers in the application. It centralizes
+ * frequently used response-related logic such as:
+ *
+ * - Returning JSON responses
+ * - Rendering HTML views with injected parameters
+ * - Performing HTTP redirects
+ * - Generating URLs from named routes
+ *
+ * By extending this class, controllers can focus solely on handling
+ * request logic and business rules, while response formatting and
+ * routing utilities are handled consistently across the application.
+ *
+ * This class is intended to be extended and should not be instantiated
+ * directly.
+ *
+ * @since 1.0 
+ */
 abstract class BaseController
 {
 
@@ -17,7 +35,7 @@ abstract class BaseController
      * @param mixed $data The data to be converted to JSON format.
      * @param int $statusCode HTTP status code for the response (default: 200).
      * @return Response The JSON-encoded data with JSON-specific headers.
-     *
+     * @since 1.0
      */
     public function json($data, $statusCode = 200): Response
     {
@@ -36,7 +54,7 @@ abstract class BaseController
      * @param string $view The path to the view file located in the /view directory.
      * @param array $params Key-value pairs of variables to be injected into the view.
      * @return Response The rendered HTML view content wrapped in a `Response` object.
-     *
+     * @since 1.0
      */
     public function render($view, $params = []): Response
     {
@@ -63,6 +81,7 @@ abstract class BaseController
      * @param string &$content The HTML content to modify.
      * @param string $currentKey Key used to generate dot notation keys for nested arrays.
      * @return void
+     * @since 1.0
      *
      */
     private function arrayChecker($array, &$content, $currentKey = '')
@@ -89,7 +108,7 @@ abstract class BaseController
      * @param array $params Parameters to replace placeholders in the route path.
      * @return Response A 302 redirect `Response` to the constructed URL.
      * @throws Exception If the route name does not exist.
-     *
+     * @since 1.0
      */
     public function redirectToRoute($route, $params = []): Response
     {
@@ -103,7 +122,7 @@ abstract class BaseController
             return new Response('', 302, ['Location' => $path]);
         }
 
-        throw new Exception("The route name '$route' is not existing");
+        throw new \Exception("The route name '$route' is not existing");
     }
 
 
@@ -115,7 +134,8 @@ abstract class BaseController
      *
      * @param string $route The URL path to redirect to.
      * @return Response A 302 redirect `Response` to the specified URL path.
-     *
+     * @since 1.0
+     * 
      */
     public function redirect($route): Response
     {
@@ -133,7 +153,7 @@ abstract class BaseController
      * @param array $parameters Parameters to replace placeholders in the route path.
      * @return string The generated URL path.
      * @throws Exception If the route name does not exist.
-     *
+     * @since 1.0
      */
     public function generateUrl($route, $parameters = []): string
     {
@@ -147,6 +167,6 @@ abstract class BaseController
             }
             return $path;
         }
-        throw new Exception("The route name '$route' is not existing");
+        throw new \Exception("The route name '$route' is not existing");
     }
 };

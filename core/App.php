@@ -2,26 +2,45 @@
 
 namespace App\Core;
 
-use App\Core\Router;
-use App\Core\Response;
-
-use Exception;
-
+/**
+ * Application core class responsible for bootstrapping the MVC workflow.
+ *
+ * This class initializes core components such as the database, entity layer,
+ * and router, then resolves the current HTTP request to a matching route.
+ * If a route is found, the corresponding controller action is executed and
+ * its response is sent to the client.
+ *
+ * @since   1.0
+ */
 class App
 {
     private Router $router;
     private DataBaseComponent $dbComponent;
-    private EntityManipulation $entity;
 
+    /**
+     * App constructor.
+     *
+     * Initializes core application components:
+     * - Database connection
+     * - Entity manipulation layer
+     * - Router
+     *
+     * Then immediately attempts to resolve and execute the current request.
+     * Any exception thrown during initialization or routing is caught and
+     * returned as an HTTP 404 response.
+     * @since   1.0
+     */
     public function __construct()
     {
         try {
             $this->dbComponent = DataBaseComponent::getInstance();
-            $this->entity = EntityManipulation::getInstance($this->dbComponent);
+            EntityManipulation::getInstance($this->dbComponent);
             $this->router = new Router();
             $this->checkForExistingResponse();
-        } catch (Exception $e) {
-            echo "<h1>" . ($e->getMessage()) . "</h1>";
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+            error_log("\033[31m$message\033[0m");
+            $this->executeResponse(new Response($message, 404));
         }
     }
 
@@ -33,6 +52,7 @@ class App
      *
      * @return string The requested URL path (e.g., "/home").
      *
+     * @since   1.0
      */
     public function getServerRoute()
     {
@@ -46,7 +66,7 @@ class App
      * It is useful for handling different types of requests and routing logic based on the request method.
      *
      * @return string The HTTP method of the current request (e.g., "GET", "POST").
-     *
+     * @since   1.0
      */
     public function getServerMethod()
     {
@@ -73,12 +93,18 @@ class App
      *      - Log a success message and execute the response.
      * - **Step 4**: If no matching route is found or an invalid response is returned, log an error and throw an exception.
      *
+     * @since   1.0
      */
     public function checkForExistingResponse()
     {
 
         $userRequestUrl = $this->getServerRoute();
         $userRequestMethod = $this->getServerMethod();
+
+        if ($userRequestMethod == "OPTIONS") {
+            http_response_code(200);
+            exit;
+        }
         $route = $this->router->match($userRequestUrl, $userRequestMethod);
         /*
             $route can be:
@@ -95,23 +121,28 @@ class App
             // Call the controller method
             $response = call_user_func_array([$controller, $functionToBeCalled], $route['params']);
 
-            $controller_name = $route['route']['controller'];
-            $path = $route['route']['path'];
-
             // We check if it returns Response object always
             if ($response instanceof Response) {
-                // $this->log->setMessage('info', "Successfully executet $controller_name::$functionToBeCalled() for route $path");
+
+                // it is not succsessfull
+                if ($response->getStatusCode() >= 400) {
+                    $message = $response->getContent();
+                    error_log("\033[31m$message\033[0m");
+                }
                 $this->executeResponse($response);
             } else {
                 // HANDLE IF RESPONSE IS NOT RESPONSE OBJECT
-                // $this->log->setMessage('error', "Class method $controller_name::$functionToBeCalled() for route $path is not returning Response object");
-                throw new \Exception("Class method $controller_name::$functionToBeCalled() for route $path is not returning Response object");
+                $controller_name = $route['route']['controller'];
+                $path = $route['route']['path'];
+                error_log("\033[31mClass method $controller_name::$functionToBeCalled() for route $path is not returning Response object\033[0m");
+                $this->executeResponse(new Response("Class method $controller_name::$functionToBeCalled() for route $path is not returning Response object", 404));
             }
             return;
         }
         // IF THERE IS NO SUCH FILE FINDED
-        // $this->log->setMessage('error', "Error 404: Not existing route $userRequestUrl");
-        throw new \Exception("Error 404: Not existing route $userRequestUrl");
+
+        error_log("\033[31mNot existing route $userRequestUrl\033[0m");
+        $this->executeResponse(new Response("Error 404: Not existing route $userRequestUrl", 404));
     }
 
 
@@ -124,6 +155,7 @@ class App
      * @param Response $response The response object that will be executed.
      * 
      * @return void This function does not return any value.
+     * @since   1.0
      */
     public function executeResponse(Response $response)
     {

@@ -2,11 +2,37 @@
 
 namespace App\Core;
 
+/**
+ * Database connection manager using the Singleton pattern.
+ *
+ * This class is responsible for establishing and maintaining a single
+ * PDO database connection throughout the lifecycle of the application.
+ * Database credentials are loaded from the `.env` file using the
+ * `DATABASE_URL` configuration value.
+ *
+ * Responsibilities:
+ * - Parse database configuration from environment file
+ * - Create the database if it does not exist
+ * - Initialize and expose a PDO connection
+ * - Ensure a single shared database connection instance
+ *
+ * This class should not be instantiated directly. Use
+ * {@see DataBaseComponent::getInstance()} instead.
+ *
+ * @since 2.0
+ */
 class DataBaseComponent
 {
     private $db;
     private static $instance;
 
+    /**
+     * Private constructor.
+     *
+     * Prevents direct instantiation and initializes the database
+     * connection using environment configuration.
+     * @since 2.0
+     */
     private function __construct()
     {
         $this->setDB();
@@ -18,7 +44,7 @@ class DataBaseComponent
      * Ensures that only one instance of DataBaseComponent is created and reused throughout the application.
      *
      * @return DataBaseComponent The singleton instance of DataBaseComponent.
-     *
+     * @since 2.0
      */
     public static function getInstance(): DataBaseComponent
     {
@@ -36,7 +62,7 @@ class DataBaseComponent
      * On connection errors, it outputs an error message.
      *
      * @return void
-     *
+     * @since 2.0
      */
     private function setDB()
     {
@@ -68,7 +94,7 @@ class DataBaseComponent
      * Retrieves the current database connection.
      *
      * @return \PDO The PDO instance representing the database connection.
-     *
+     * @since 2.0
      */
     public function getDB()
     {

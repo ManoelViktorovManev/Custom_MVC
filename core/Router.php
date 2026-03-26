@@ -2,9 +2,19 @@
 
 namespace App\Core;
 
-use App\Core\Route;
-use App\Core\YamlParser as Yaml;
-
+/**
+ * Router class responsible for managing HTTP routes.
+ *
+ * The Router handles:
+ * - Loading route definitions from controller attributes, config files, and YAML.
+ * - Matching incoming URLs and HTTP methods to routes.
+ * - Generating and retrieving routes by name.
+ * - Managing route-controller associations.
+ *
+ * Implements a singleton pattern to ensure a single router instance across the application.
+ *
+ * @since 1.0
+ */
 class Router
 {
     private array $routes = [];
@@ -22,6 +32,7 @@ class Router
      * - `config/routes.yaml` using a YAML parser.
      * 
      * The loaded routes are stored in `$this->routes`.
+     * @since 1.0
      */
     public function __construct()
     {
@@ -35,7 +46,7 @@ class Router
         }
 
         // get Routes from /config/routes.yaml
-        $yamlRoutes = Yaml::parseFile(dirname(__DIR__) . '/config/routes.yaml');
+        $yamlRoutes = YamlParser::parseFile(dirname(__DIR__) . '/config/routes.yaml');
         foreach ($yamlRoutes as $name => $route) {
             $this->add($name, $route['path'])
                 ->controller($route['controller'], $route['action']);
@@ -48,6 +59,7 @@ class Router
      * Ensures a single instance of `Router` is used across the application.
      *
      * @return Router The singleton Router instance.
+     * @since 1.0
      */
     public static function getInstance(): Router
     {
@@ -65,6 +77,7 @@ class Router
      * and optionally, a route name for easier reference.
      *
      * @return array An array of loaded routes with their details.
+     * @since 1.0
      */
     private function loadRoutes(): array
     {
@@ -123,7 +136,7 @@ class Router
      * @param string $url The URL to match.
      * @param string $method The HTTP method (e.g., GET, POST) to match.
      * @return array|null An associative array with route and parameters if matched, or null if no match.
-     *
+     * @since 1.0
      */
     public function match(string $url, string $method): ?array
     {
@@ -159,7 +172,7 @@ class Router
      *
      * @param string $name The name of the route to retrieve.
      * @return array|null The route definition if the name exists, or null if not found.
-     *
+     * @since 1.0
      */
     public function fromNameToRoute($name)
     {
@@ -181,6 +194,7 @@ class Router
      * @return $this Returns the current Router instance for method chaining.
      * 
      * @throws \Exception If the route name is already in use, an error is thrown.
+     * @since 2.0
      */
     public function add($name, $path, $methods = ["GET"])
     {
@@ -207,6 +221,7 @@ class Router
      * @param string $controller The fully qualified class name of the controller.
      * @param string $method_name The method in the controller that handles the route.
      * @return $this Returns the current Router instance for method chaining.
+     * @since 2.0
      */
     public function controller($controller, $method_name)
     {

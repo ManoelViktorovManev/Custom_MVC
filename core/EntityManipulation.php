@@ -2,13 +2,40 @@
 
 namespace App\Core;
 
-use App\Core\DataBaseComponent;
-
+/**
+ * Automatic entity-to-database schema manager.
+ *
+ * This class is responsible for scanning application model classes
+ * and synchronizing their structure with the database schema.
+ * It uses reflection to analyze model properties and dynamically
+ * creates database tables when they do not exist.
+ *
+ * Responsibilities:
+ * - Discover model classes
+ * - Analyze entity properties and types
+ * - Automatically generate database tables
+ * - Maintain a single shared instance (Singleton pattern)
+ *
+ * This class is initialized during application bootstrap and should
+ * not be instantiated directly.
+ *
+ * @since 2.0
+ */
 class EntityManipulation
 {
 
     private static $instance;
     private $db;
+
+    /**
+     * Private constructor.
+     *
+     * Initializes the entity manager and triggers entity scanning
+     * and database schema synchronization.
+     *
+     * @param DataBaseComponent $dbcomp Database component instance.
+     * @since 2.0 
+     */
     private function __construct(DataBaseComponent $dbcomp)
     {
         $this->db = $dbcomp->getDB();
@@ -21,7 +48,7 @@ class EntityManipulation
      * Ensures that only one instance of EntityManipulation is created and reused throughout the application.
      *
      * @return EntityManipulation The singleton instance of EntityManipulation.
-     *
+     * @since 2.0 
      */
     public static function getInstance(DataBaseComponent $dbComponent): EntityManipulation
     {
@@ -39,7 +66,7 @@ class EntityManipulation
      * each model. If a table does not exist for the model, `createTable()` is called to generate it.
      *
      * @return array An associative array of entities with property names and types.
-     *
+     * @since 2.0 
      */
     private function scanEntitys()
     {
@@ -75,7 +102,7 @@ class EntityManipulation
      * @param string $tableName The name of the table to create.
      * @param array $entity An associative array of column names and their data types.
      * @return int|false The number of affected rows or false on failure.
-     *
+     * @since 2.0 
      */
     private function createTable($tableName, $entity)
     {
@@ -90,6 +117,7 @@ class EntityManipulation
                 'int' => 'INT',
                 'string' => 'VARCHAR(255)',
                 'bool' => 'BOOLEAN',
+                'float' => 'DECIMAL(16,8)',
                 default => 'TEXT'
             };
             $columns[] = "{$name} $columnType";
