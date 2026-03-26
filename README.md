@@ -29,8 +29,15 @@ The project **Custom MVC** is PHP open-source web application MVC framework.
   - [Available Model Methods - QueryBuilder](#available-model-methods---querybuilder-class)
     - [all(): array](#all-array)
     - [first(): ?BaseModel](#first-basemodel)
-    - [where(array $inputs)](#wherearray-inputs)
-    - [order(array ...$inputs)](#orderarray-inputs)
+    - [where(string $key, string $operation, mixed $value)](#wherestring-key-string-operation-mixed-value)
+    - [and(): QueryBuilder](#and-querybuilder)
+    - [or(): QueryBuilder](#or-querybuilder)
+    - [select(string ...$columns): QueryBuilder](#selectstring-columns-querybuilder)
+    - [join(string $type, string $table, string $condition): QueryBuilder](#joinstring-type-string-table-string-condition-querybuilder)
+    - [order(array ...$inputs): QueryBuilder](#orderarray-inputs-querybuilder)
+    - [limit(int $limit, int $page): QueryBuilder](#limitint-limit-int-page-querybuilder)
+    - [raw(string $sql, array $bindings = []): QueryBuilder](#rawstring-sql-array-bindings-querybuilder)
+    - [multiQuery(array $queries): QueryBuilder](#multiqueryarray-queries-querybuilder)
   - [Access the Database](#access-the-database)
     - [add(BaseModel $entity)](#addbasemodel-entity)
     - [delete(BaseModel $entity)](#deletebasemodel-entity)
@@ -377,9 +384,16 @@ All models **must extend the `BaseModel` class**, which provides built-in method
 By extending `BaseModel`, each model gains access to the powerful `query()` method, which provides a fluent interface for database queries. Common query methods include:
 
 - `all(): array` – Retrieve all records
-- `first(): ?BaseModel` – Fetch the first matching result
-- `where(array $inputs): QueryBuilder` – Add filtering conditions
-- `order(array $inputs): QueryBuilder` – Sort query results
+- `first(): ?BaseModel` – Retrieve the first matching record and hydrate the model
+- `where(string $key, string $operation, mixed $value): QueryBuilder` – Add a WHERE condition
+- `and(): QueryBuilder` – Append an AND condition
+- `or(): QueryBuilder` – Append an OR condition
+- `select(string ...$columns): QueryBuilder` – Select specific columns
+- `join(string $type, string $table, string $condition): QueryBuilder` – Add JOIN clauses
+- `order(array ...$inputs): QueryBuilder` – Apply ORDER BY
+- `limit(int $limit, int $page): QueryBuilder` – Apply pagination
+- `raw(string $sql, array $bindings = []): QueryBuilder` – Execute raw SQL safely
+- `multiQuery(array $queries): QueryBuilder` – Execute multiple queries sequentially
 
 These allow you to build expressive and readable database queries directly from your model classes.
 
@@ -505,14 +519,14 @@ public function accessfirstUser()
     return $this->json([$user->getId(), $user->getName(), $user->getEmail()]);
 }
 ```
-### where(array $inputs)
-It performs an sql **WHERE** operation. It have three inputs in the array: **key, operation and value**. The first element is which **row** to look into the table. The allowed **operations** are: **'=', '!=', '<', '>', '<=', '>=' and 'LIKE'**. And the **value** is the looking value from the row.
+### where(string $key, string $operation, string $value)
+It performs an sql **WHERE** operation. It have three inputs: **key, operation and value**. The first element is which **row** to look into the table. The allowed **operations** are: **'=', '!=', '<', '>', '<=', '>=' and 'LIKE'**. And the **value** is the looking value from the row.
 ```php
 #[Route('/accessWhereUser')]
 public function accessWhereUser()
 {
     $user = new User();
-    $user->query()->where(['name', '=', "TEST"])->first();
+    $user->query()->where('name', '=', "TEST")->first();
 
     return $this->json([$user->getId(), $user->getName(), $user->getEmail()]);
 }
@@ -529,6 +543,56 @@ public function accessOrderUser()
     return new Response("Successfuly order");
 }
 ```
+### select(string ...$colums)
+Append an **SELECT** condition to the selected **ModelClass**
+```php
+$user->query()
+     ->select('name','id')
+     ->where('id', '>', '20')
+     ->all()
+```
+
+### join(string $typeJoin, string $table, string $sql)
+Adds a **SQL JOIN** clause.
+```php
+$user->query()
+     ->where('name', '=', 'John')
+     ->join("Inner", "Post","something")
+     ->first();
+```
+### and(): QueryBuilder`
+Appends an **AND** condition to the previous WHERE clause.
+
+```php
+$user->query()
+     ->where('name', '=', 'John')
+     ->and()
+     ->where('email', 'LIKE', '%@gmail.com')
+     ->first();
+```
+
+### or(): QueryBuilder
+
+Appends an **OR** condition to the previous WHERE clause.
+
+```php
+$user->query()
+     ->where('name', '=', 'John')
+     ->or()
+     ->where('name', '=', 'Jane')
+     ->all();
+```
+
+### raw(string $sql, array $bindings)
+Executes a raw SQL query with optional parameter binding.
+
+### multiQuery(array $queries)
+Executes multiple queries sequentially.
+
+
+### limit(int $numberOfElements, int $pageNumber)
+Limits the number of results and supports pagination.
+
 ### Access the Database
 You can access the database by getting an instance from **DbManipulation class**. Here is an example:
 ```php
